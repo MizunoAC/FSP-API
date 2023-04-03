@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ApplicationModels;
 using Proyecto_faunasilvestre.Context;
@@ -25,7 +26,7 @@ namespace Proyecto_faunasilvestre.Controladores
 
 
         //Agregar Nuevo Usuario
-
+       
         [HttpPost("AgregarUsuario")]
 
         public async Task<ActionResult> AgregarUsuario(ModeloUsuarioDTO usuarioDTO)
@@ -38,6 +39,8 @@ namespace Proyecto_faunasilvestre.Controladores
                     NoContent();
                 }
 
+                usuarioDTO.Edad = Convert.ToInt32(usuarioDTO.Edad);
+
                 var usuario = await _usuariosServicio.AgregarUsuarioDTO(usuarioDTO);
                 return Ok(usuario);
 
@@ -46,15 +49,11 @@ namespace Proyecto_faunasilvestre.Controladores
 
             catch(Excepcion2)
             {
-                return BadRequest("Usuario Existente en la base de datos");
+                return BadRequest("Usuario Existente");
 
             }
 
-            catch(Excepcion3) {
-
-                return BadRequest("Error al confirmar las contrasenas");
-
-            }
+        
 
 
         }

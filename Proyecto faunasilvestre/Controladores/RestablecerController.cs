@@ -26,8 +26,8 @@ namespace Proyecto_faunasilvestre.Controladores
 
         //Enviar Correo Electronico al Usuario
 
-        [HttpPost("EnviarCorreo")]
-        public async Task<ActionResult> EnviarcorreoDeRecuperacion([FromBody] string Email)
+        [HttpPost("EnviarCorreo{Email}")]
+        public async Task<ActionResult> EnviarcorreoDeRecuperacion( string Email)
         {
 
             var usuario = _contexDb.ModeloUsuarios.Where(e => e.Email == Email).FirstOrDefault();
@@ -64,10 +64,10 @@ namespace Proyecto_faunasilvestre.Controladores
 
                 });
 
-                return Ok("Correo enviado");
+                return Ok();
             }
 
-            return BadRequest();
+            return BadRequest("Correo no registrado");
 
         }
 
@@ -76,18 +76,18 @@ namespace Proyecto_faunasilvestre.Controladores
 
         [HttpPost("RestablecerContrasena")]
 
-        public async Task<ActionResult> RestablecerContrasena(string Contrasena, string Codigo, string Correo)
+        public async Task<ActionResult> RestablecerContrasena(RestablecerModelo datos)
         {
             try
             {
-                var usuario = await _contexDb.codigos.Where(t => t.Token == Codigo && t.Usado == false 
-                && t.Correo ==Correo).FirstOrDefaultAsync();
+                var usuario = await _contexDb.codigos.Where(t => t.Token == datos.Codigo && t.Usado == false 
+                && t.Correo ==datos.Correo).FirstOrDefaultAsync();
 
-               var ExisteUsuario = await _recuperarcontra.CambiarContrasena(usuario, Contrasena);
+               var ExisteUsuario = await _recuperarcontra.CambiarContrasena(usuario, datos.Contraseña);
 
                 if (ExisteUsuario != null)
                 {
-                    return Ok("Contraseña Actualizada");
+                    return Ok();
                 }
 
                 else
@@ -99,7 +99,7 @@ namespace Proyecto_faunasilvestre.Controladores
             }
             catch (Exception ex) 
             {
-                return NotFound();
+                return NotFound("Error al cambiar la contraseña");
             }
 
         }

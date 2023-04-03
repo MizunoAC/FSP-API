@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Proyecto_faunasilvestre.Context;
 
@@ -11,9 +12,11 @@ using Proyecto_faunasilvestre.Context;
 namespace Proyecto_faunasilvestre.Migrations
 {
     [DbContext(typeof(ContexDb))]
-    partial class ContexDbModelSnapshot : ModelSnapshot
+    [Migration("20230322182146_eliminarimagen")]
+    partial class eliminarimagen
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -100,18 +103,10 @@ namespace Proyecto_faunasilvestre.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
-                    b.Property<string>("ImagenAnimal")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<int>("ModeloUsuarioId")
                         .HasColumnType("int");
 
                     b.Property<string>("NombreComun")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Ubicacion")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 

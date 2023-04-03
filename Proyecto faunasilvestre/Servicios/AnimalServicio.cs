@@ -166,6 +166,22 @@ namespace Proyecto_faunasilvestre.Servicios
 
 
 
+        public async Task<Contadores> contador()
+        {
+
+          var contadores = new Contadores();
+
+            var usuarios =  _contextoDb.ModeloUsuarios.Count();
+            var animales =  _contextoDb.ModeloAnimales.Count();
+
+            contadores.Usuarios = usuarios;
+            contadores.Registros = animales;
+
+            
+            return contadores;
+
+        }
+
     }
 
 

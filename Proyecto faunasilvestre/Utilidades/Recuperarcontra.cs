@@ -41,10 +41,7 @@ namespace Proyecto_faunasilvestre.Utilidades
                 Port = 587,
                 Host = "smtp.office365.com",
                 EnableSsl = true,
-                Credentials = credentials,
-                
-          
-
+                Credentials = credentials
 
             };
 

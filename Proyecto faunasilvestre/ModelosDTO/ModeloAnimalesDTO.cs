@@ -11,7 +11,7 @@ namespace Proyecto_faunasilvestre.ModelosDTO
 
         public string NombreComun { get; set; }
 
-        public byte[] ImagenAnimal { get; set; }
+        public string ImagenAnimal { get; set; }
 
 
         [Required(ErrorMessage = "El Campo Condicion Animal es Obligatorio")]
@@ -21,6 +21,9 @@ namespace Proyecto_faunasilvestre.ModelosDTO
         [StringLength(200, ErrorMessage = "Debe contener menos de 200 caracteres")]
         public string Descripcionanimal { get; set; }
 
+        public string Ubicacion { get; set; }
+
+        public string? ImgBase64 { get; set; }
 
     }
 }

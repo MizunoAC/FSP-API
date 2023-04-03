@@ -10,13 +10,21 @@ using System.Net.Mail;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
-
 // Add services to the container.
 
 ////////////////////////////////////////////////////////////////////////
 ///
 
-
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("nuevapolitica", app =>
+    {
+        app.WithOrigins("https://*.ngrok.io")
+        .AllowAnyOrigin()
+        .AllowAnyHeader()
+        .AllowAnyMethod();
+    });
+});
 
 
 ///////////////////////////////////////////////////////////////////////
@@ -76,10 +84,21 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-app.UseCors();
+
+
+
 app.UseHttpsRedirection();
+
+app.UseCors(x => x
+    .AllowAnyMethod()
+    .AllowAnyHeader()
+    .AllowAnyOrigin());
+
+
+
 app.UseAuthentication();
-app.UseAuthorization();
+app.UseAuthorization(); 
+
 
 app.MapControllers();
 

@@ -17,8 +17,6 @@ namespace Proyecto_faunasilvestre.Modelos
 
         public string NombreComun { get; set; }
 
-        public byte[] ImagenAnimal { get; set; }
-
 
         [Required]
         [StringLength(20)]
@@ -27,6 +25,9 @@ namespace Proyecto_faunasilvestre.Modelos
         [StringLength(200)]
         public string Descripcionanimal { get; set; }
 
+        public string ImagenAnimal { get; set; }
+
+        public string Ubicacion { get; set; }
 
         //public virtual List<AnimalesCatalogo>? AnimalesCatalogos { get; set; }
 

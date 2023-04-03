@@ -2,8 +2,10 @@
 using Microsoft.AspNetCore.Mvc;
 using Proyecto_faunasilvestre.Context;
 using Proyecto_faunasilvestre.Excepcionescontroladas;
+using Proyecto_faunasilvestre.Modelos.ViewModel;
 using Proyecto_faunasilvestre.ModelosDTO;
 using Proyecto_faunasilvestre.Servicios;
+using System.Text.Json.Nodes;
 
 namespace Proyecto_faunasilvestre.Controladores
 {
@@ -23,7 +25,7 @@ namespace Proyecto_faunasilvestre.Controladores
 
         //Metodo para generar iniciar sesion
 
-        [HttpPost]
+        [HttpPost("IniciarSesion")]
 
         public async Task <ActionResult> Iniciarsecion(ModeloLoginDTO modeloLoginDTO )
         {
@@ -38,18 +40,25 @@ namespace Proyecto_faunasilvestre.Controladores
 
                 }
 
-                var token = _loginServicio.GereneraciondelToken(Usuario);
+                TokenModel tokenModel = new TokenModel()
+                {
+                    Token = _loginServicio.GereneraciondelToken(Usuario)
+            };
 
-                return Ok(token);
+                
+               
+           
+
+                return Ok(tokenModel);
             }
 
             catch(Excepcion3)
             {
-                return BadRequest("Contrasena Incorrecta");
+                return BadRequest("Usuario no registrado");
             }
             catch (Excepcion4)
             {
-              return  BadRequest("Usuario no encontrado");
+              return  BadRequest("Contraseña incorrecta");
             }
 
         }

@@ -20,6 +20,8 @@ namespace Proyecto_faunasilvestre.Servicios
 
         public Task<IEnumerable<AnimalesCatalogoDTO>> AnimalesenCatalogo();
 
+        public Task<Contadores> contador();
+
 
 
 

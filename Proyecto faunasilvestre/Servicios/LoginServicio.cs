@@ -27,37 +27,38 @@ namespace Proyecto_faunasilvestre.Servicios
 
         public async Task<ModeloUsuario> Autentificacion(ModeloLoginDTO modeloLoginDTO)
         {
+            
+                var Usuario = await _contextoDb.ModeloUsuarios.Where(c => c.NombreUsuario == modeloLoginDTO.NombreUsuario).FirstOrDefaultAsync();
 
-            var Usuario = await _contextoDb.ModeloUsuarios.Where(c => c.NombreUsuario == modeloLoginDTO.NombreUsuario).FirstOrDefaultAsync();
-
-            if (Usuario == null)
-            {
-
-                return Usuario;
-            }
-
-            else
-            {
-
-
-                var ContrasenaCorrecta = BCrypt.Net.BCrypt.Verify(modeloLoginDTO.Contraseña, Usuario.Contraseña);
-                //var ContrasenaCorrecta = Usuario.Contraseña.ToLower().Equals(modeloLoginDTO.Contraseña);
-
-
-                if (ContrasenaCorrecta == true)
+                if (Usuario == null)
                 {
 
-                    return Usuario;
-
+                throw new Excepcion3();
                 }
-
 
                 else
                 {
-                    return null;
-                }
 
-            }
+
+                    var ContrasenaCorrecta = BCrypt.Net.BCrypt.Verify(modeloLoginDTO.Contraseña, Usuario.Contraseña);
+                    //var ContrasenaCorrecta = Usuario.Contraseña.ToLower().Equals(modeloLoginDTO.Contraseña);
+
+
+                    if (ContrasenaCorrecta == true)
+                    {
+
+                        return Usuario;
+
+                    }
+
+
+                    else
+                    {
+                        throw new Excepcion4();
+                    }
+
+                }
+            
         }
 
 
