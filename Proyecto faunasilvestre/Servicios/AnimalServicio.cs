@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Proyecto_faunasilvestre.Context;
 using Proyecto_faunasilvestre.Excepcionescontroladas;
 using Proyecto_faunasilvestre.Modelos;
+using Proyecto_faunasilvestre.Modelos.TablaTemporal;
 using Proyecto_faunasilvestre.ModelosDTO;
 using System.Data.SqlTypes;
 
@@ -29,7 +30,7 @@ namespace Proyecto_faunasilvestre.Servicios
 
         //Agregar un nuevo registro de un animal
 
-            public async Task<ModeloAnimales> AgregarAnimalDTO(ModeloAnimalesDTO animalesDTO)
+            public async Task<ModeloAnimalTemporal> AgregarAnimalDTO(ModeloAnimalesDTO animalesDTO)
         {
 
             // Comparar la variable recibida al registrar con la de la tabla estatica y asignar el Id correspondiente
@@ -42,14 +43,29 @@ namespace Proyecto_faunasilvestre.Servicios
             {
 
                 Console.WriteLine("El catalogo no existe");
-                throw new Excepcion1();
+                var Animal = _Mapeo.Map<ModeloAnimalTemporal>(animalesDTO);
+
+                Animal.AnimalesCatalogoId = 7;
+                Animal.Aceptado = false;
+                Animal.rechazado= false;
+
+                await _contextoDb.Temporal.
+                    AddAsync(Animal);
+                await _contextoDb.SaveChangesAsync();
+
+                return Animal;
+
+
 
             }
             else
             {
-                var Animal = _Mapeo.Map<ModeloAnimales>(animalesDTO);
+                var Animal = _Mapeo.Map<ModeloAnimalTemporal>(animalesDTO);
 
                 Animal.AnimalesCatalogoId = Catalogo.First().AnimalesCatalogoId;
+
+                Animal.Aceptado = false;
+                Animal.rechazado = false;
 
                 await _contextoDb.AddAsync(Animal);
                 await _contextoDb.SaveChangesAsync();
@@ -80,11 +96,29 @@ namespace Proyecto_faunasilvestre.Servicios
             return await _contextoDb.ModeloAnimales.ProjectTo<ModeloAnimalesDTO>(_Mapeo.ConfigurationProvider).ToListAsync();
 
         }
-        
+
+
+        // Registros en espera de aceptacion del administrador
+        public async Task<IEnumerable<ModeloTemporalDTO>> BuscarAnimalesTemporal()
+        {
+            return await _contextoDb.Temporal.Where(A=> A.Aceptado==false && A.rechazado==false)
+                .ProjectTo<ModeloTemporalDTO>(_Mapeo.ConfigurationProvider).ToListAsync();
+
+        }
+
+        // Registros Aceptados por el administrador
+
+        public async Task<IEnumerable<ModeloTemporalDTO>> BuscarAnimalesAceptados()
+        {
+            return await _contextoDb.Temporal.Where(A => A.Aceptado == true && A.rechazado== false)
+                .ProjectTo<ModeloTemporalDTO>(_Mapeo.ConfigurationProvider).ToListAsync();
+
+        }
+
 
         // Obtener registros de un usuario
 
-            public async Task <IEnumerable<ModeloAnimalesDTO>> BuscarAnimalesPorUsuario(int ModeloUsuarioId)
+        public async Task <IEnumerable<ModeloAnimalesDTO>> BuscarAnimalesPorUsuario(int ModeloUsuarioId)
         {
 
            var Animal = await _contextoDb.ModeloAnimales.Where(A => A.ModeloUsuarioId == ModeloUsuarioId).ProjectTo<ModeloAnimalesDTO>
@@ -166,7 +200,7 @@ namespace Proyecto_faunasilvestre.Servicios
 
 
 
-        public async Task<Contadores> contador()
+        public  async Task<Contadores> contador()
         {
 
           var contadores = new Contadores();
@@ -177,13 +211,59 @@ namespace Proyecto_faunasilvestre.Servicios
             contadores.Usuarios = usuarios;
             contadores.Registros = animales;
 
-            
+
             return contadores;
 
         }
 
-    }
+   
+    
+    public async Task <ModeloAnimalTemporal> RegistrosAC(int id)
+        {
 
+            var registro = await _contextoDb.Temporal.FindAsync(id);
+
+           
+            if (registro == null)
+            {
+                return null;
+            }
+
+            registro.Aceptado = true;
+
+            var Animal = _Mapeo.Map<ModeloAnimales>(registro);
+
+            await _contextoDb.ModeloAnimales.AddAsync(Animal);
+            await _contextoDb.SaveChangesAsync(); 
+
+
+            return registro;
+
+        }
+
+
+
+        public async Task<ModeloAnimalTemporal> RegistrosRE(int id)
+        {
+
+            var registro = await _contextoDb.Temporal.FindAsync(id);
+
+
+            if (registro == null)
+            {
+                return null;
+            }
+
+            registro.rechazado = true;
+            await _contextoDb.SaveChangesAsync();
+
+
+            return registro;
+
+        }
+
+
+    }
 
 
 }

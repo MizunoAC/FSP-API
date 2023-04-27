@@ -65,7 +65,7 @@ namespace Proyecto_faunasilvestre.Servicios
                 {
 
                     Console.WriteLine("Existe este nombre de usuario en la base de datos");
-                    throw new Excepcion2();
+                    throw new Excepcion();
 
                 }
 

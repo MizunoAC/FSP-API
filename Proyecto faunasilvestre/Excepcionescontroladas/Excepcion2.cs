@@ -1,8 +1,8 @@
 ﻿namespace Proyecto_faunasilvestre.Excepcionescontroladas
 {
-    public class Excepcion2: ApplicationException
+    public class Excepcion: ApplicationException
     {
-        public Excepcion2() : base("Usuario registrado en la base de datos") { }
+        public Excepcion() : base("Usuario registrado en la base de datos") { }
 
     }
 }

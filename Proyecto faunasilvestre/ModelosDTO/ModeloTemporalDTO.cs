@@ -2,9 +2,11 @@
 
 namespace Proyecto_faunasilvestre.ModelosDTO
 {
-    public class ModeloAnimalesDTO
+    public class ModeloTemporalDTO
     {
-        public  int ModeloUsuarioId { get; set; }
+
+        public int Id { get; set; }
+        public int ModeloUsuarioId { get; set; }
 
         //public virtual int AnimalesCatalogoId { get; set; }
 

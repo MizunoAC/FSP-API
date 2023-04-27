@@ -13,15 +13,17 @@ namespace Proyecto_faunasilvestre.Controladores
     {
         private readonly IRecuperarcontra _recuperarcontra;
         private readonly ContexDb _contexDb;
+        private readonly ILogger<RestablecerController> _logger;
 
 
 
 
-        public RestablecerController(IRecuperarcontra recuperarcontra, ContexDb contexDb) {
+        public RestablecerController(IRecuperarcontra recuperarcontra, ContexDb contexDb, ILogger<RestablecerController> logger)
+        {
 
             _contexDb = contexDb;
             _recuperarcontra = recuperarcontra;
-
+            _logger = logger;
         }
 
         //Enviar Correo Electronico al Usuario
@@ -30,44 +32,52 @@ namespace Proyecto_faunasilvestre.Controladores
         public async Task<ActionResult> EnviarcorreoDeRecuperacion( string Email)
         {
 
-            var usuario = _contexDb.ModeloUsuarios.Where(e => e.Email == Email).FirstOrDefault();
-
-            if (usuario != null)
+            try
             {
 
-                Random ramdon = new Random();
-                var Codigo = ramdon.Next(10000, 90000).ToString();
-                
+                var usuario = _contexDb.ModeloUsuarios.Where(e => e.Email == Email).FirstOrDefault();
 
-                _contexDb.codigos.Add(new Codigo
+                if (usuario != null)
                 {
-                    fecha = DateTime.Now,
-                    Token= Codigo,
-                    ModeloUsuarioId=usuario.ModeloUsuarioId,
-                    Usado = false,
-                    Correo = Email
-                });
-                await _contexDb.SaveChangesAsync();
 
-                string mensaje = "Hola este es un correo autogenarado para la recuperación " +
-                    "o restablecimiento de la contraseña. <br></br> Por favor copie y pegue el siguiente código en la aplicación" +
-                    "<br></br>" + Codigo + "<br></br>" +
-                    "Que tenga un buen día";
+                    Random ramdon = new Random();
+                    var Codigo = ramdon.Next(10000, 90000).ToString();
 
 
+                    _contexDb.codigos.Add(new Codigo
+                    {
+                        fecha = DateTime.Now,
+                        Token = Codigo,
+                        ModeloUsuarioId = usuario.ModeloUsuarioId,
+                        Usado = false,
+                        Correo = Email
+                    });
+                    await _contexDb.SaveChangesAsync();
 
-                await _recuperarcontra.enviarCorreo(new EmailMensaje
-                {
-                    Email = Email,
-                    Asunto = "Restablecimiento de Contraseña",
-                    Mensaje = mensaje
+                    string mensaje = "Hola este es un correo autogenarado para la recuperación " +
+                        "o restablecimiento de la contraseña. <br></br> Por favor copie y pegue el siguiente código en la aplicación" +
+                        "<br></br>" + Codigo + "<br></br>" +
+                        "Que tenga un buen día";
 
-                });
 
-                return Ok();
+
+                    await _recuperarcontra.enviarCorreo(new EmailMensaje
+                    {
+                        Email = Email,
+                        Asunto = "Restablecimiento de Contraseña",
+                        Mensaje = mensaje
+
+                    });
+
+                    return Ok();
+                }
+                return BadRequest("Correo no registrado");
             }
-
-            return BadRequest("Correo no registrado");
+            catch (Exception ex)
+            {
+                _logger.LogError("ERROR: " + ex.ToString());
+                return BadRequest("Correo no registrado");
+            }
 
         }
 
@@ -99,6 +109,7 @@ namespace Proyecto_faunasilvestre.Controladores
             }
             catch (Exception ex) 
             {
+                _logger.LogError("ERROR: " + ex.ToString());
                 return NotFound("Error al cambiar la contraseña");
             }
 

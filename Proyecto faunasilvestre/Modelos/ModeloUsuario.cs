@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Proyecto_faunasilvestre.Modelos.TablaTemporal;
 using Proyecto_faunasilvestre.Modelos.ViewModel;
 using System.ComponentModel.DataAnnotations;
 
@@ -48,6 +49,8 @@ namespace Proyecto_faunasilvestre.Modelos
 
         public virtual List<ModeloAnimales>? AnimalModels { get; set; }
         public virtual List<Codigo>? Tokens { get; set; }
+
+        public virtual List<ModeloAnimalTemporal>? Temp { get; set; }
 
     }
 }

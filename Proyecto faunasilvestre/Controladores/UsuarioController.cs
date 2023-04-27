@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ApplicationModels;
+using NLog.Fluent;
 using Proyecto_faunasilvestre.Context;
 using Proyecto_faunasilvestre.Excepcionescontroladas;
 using Proyecto_faunasilvestre.Modelos;
@@ -17,16 +18,18 @@ namespace Proyecto_faunasilvestre.Controladores
     {
         private readonly IUsuariosServicio _usuariosServicio;
         private readonly ContexDb _contextDb;
+        private readonly ILogger<UsuarioController> _logger;
 
-        public UsuarioController(IUsuariosServicio usuariosServicio, ContexDb contextDb)
+        public UsuarioController(IUsuariosServicio usuariosServicio, ContexDb contextDb, ILogger<UsuarioController> logger)
         {
             _usuariosServicio = usuariosServicio;
             _contextDb = contextDb;
+            _logger = logger;
         }
 
 
         //Agregar Nuevo Usuario
-       
+
         [HttpPost("AgregarUsuario")]
 
         public async Task<ActionResult> AgregarUsuario(ModeloUsuarioDTO usuarioDTO)
@@ -47,9 +50,11 @@ namespace Proyecto_faunasilvestre.Controladores
 
             }
 
-            catch(Excepcion2)
+            catch( Excepcion ex)
             {
-                return BadRequest("Usuario Existente");
+                _logger.LogError("ERROR: " + ex.ToString());
+
+                return StatusCode(400, "El nombre de usuario ya existe en la base de datos, por favor elija otro");
 
             }
 
@@ -74,10 +79,9 @@ namespace Proyecto_faunasilvestre.Controladores
 
                 return Ok(User);
             }
-            catch
-            {
-                return NotFound("Sin registros");
-
+            catch(Exception ex) { 
+                _logger.LogWarning("Error: " + ex.ToString());
+                return NotFound("Sin registros"); 
             }
         }
 
@@ -101,10 +105,10 @@ namespace Proyecto_faunasilvestre.Controladores
 
                 return Ok(usuarios);
             }
-            catch
-            {
-                return NotFound("Sin registros");
-
+            catch(Exception ex) {
+                _logger.LogWarning("Error: " + ex.ToString()); 
+                return NotFound("Sin registros"); 
+            
             }
 
 

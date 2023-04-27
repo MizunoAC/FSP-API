@@ -8,6 +8,8 @@ using Proyecto_faunasilvestre.Utilidades;
 using System.Configuration;
 using System.Net.Mail;
 using System.Text;
+using NLog.Extensions.Logging;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
@@ -29,6 +31,9 @@ builder.Services.AddCors(options =>
 
 ///////////////////////////////////////////////////////////////////////
 ///
+
+
+
 
 
 
@@ -64,6 +69,12 @@ builder.Services.AddScoped<IUsuariosServicio, UsuariosServicio>();
 builder.Services.AddScoped<IAnimalServicio, AnimalServicio>();
 builder.Services.AddScoped<ILoginServicio, LoginServicio>();
 builder.Services.AddScoped<IRecuperarcontra, Recuperarcontra>();
+
+
+builder.Host.ConfigureLogging((hostingContext, logging) =>
+{
+    logging.AddNLog();
+});
 
 
 builder.Services.AddAutoMapper(typeof(Program));

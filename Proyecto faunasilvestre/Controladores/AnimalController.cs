@@ -7,11 +7,14 @@ using Microsoft.EntityFrameworkCore;
 using Proyecto_faunasilvestre.Context;
 using Proyecto_faunasilvestre.Excepcionescontroladas;
 using Proyecto_faunasilvestre.Modelos;
+using Proyecto_faunasilvestre.Modelos.ViewModel;
 using Proyecto_faunasilvestre.ModelosDTO;
 using Proyecto_faunasilvestre.Servicios;
+using Proyecto_faunasilvestre.Utilidades;
 using System;
 using System.Drawing;
 using System.Security.Claims;
+using System.Web.Http.Results;
 
 namespace Proyecto_faunasilvestre.Controladores
 {
@@ -27,13 +30,18 @@ namespace Proyecto_faunasilvestre.Controladores
         private readonly IUsuariosServicio _usuariosServicio;
         private readonly ContexDb _contexDb;
         private readonly IConfiguration _config;
+        private readonly IRecuperarcontra _recuperarcontra;
+        private readonly ILogger<AnimalController> _logger;
 
-        public AnimalController(IAnimalServicio animalServicio, IUsuariosServicio usuariosServicio, ContexDb contexDb, IConfiguration config)
+        public AnimalController(IAnimalServicio animalServicio, IUsuariosServicio usuariosServicio, ContexDb contexDb, IConfiguration config, IRecuperarcontra recuperarcontra, 
+            ILogger<AnimalController> logger)
         {
             _animalServicio = animalServicio;
             _usuariosServicio = usuariosServicio;
             _contexDb = contexDb;
             _config = config;
+            _recuperarcontra = recuperarcontra;
+            _logger = logger;
         }
 
         // Agregar nuevo animal cuando el usuario inicie sesion
@@ -49,6 +57,7 @@ namespace Proyecto_faunasilvestre.Controladores
 
                 if (!ModelState.IsValid)
                 {
+                    _logger.LogWarning("El modelo no es valido");
                    return NoContent();
                 }
 
@@ -96,11 +105,13 @@ namespace Proyecto_faunasilvestre.Controladores
                         );
                 }
 
+
                 return BadRequest();
             }
 
-            catch (Excepcion1)
+            catch (Excepcion1 ex) 
             {
+                _logger.LogWarning("Error: " + ex.ToString());
                 return NotFound("Catalogo de animales inexistente");
 
 
@@ -111,7 +122,7 @@ namespace Proyecto_faunasilvestre.Controladores
 
 
         // Generar lista de animales completa, todos los usuarios 
-        [Authorize]
+        
         [HttpGet("ObtenerAnimal")]
 
         public async Task<ActionResult<IEnumerable<ModeloAnimalesDTO>>>BuscarAnimales()
@@ -119,18 +130,33 @@ namespace Proyecto_faunasilvestre.Controladores
 
             try
             {
-
+                var imagenes = new ImagenesDTO();
+                _config.GetSection(ImagenesDTO.ImagenesSettings).Bind(imagenes);
                 var animales = await _animalServicio.BuscarAnimales();
 
                 if (animales != null)
                 {
+
+                    foreach (var Animal in animales)
+                    {
+
+                        string nombreImg = $"{imagenes.Path}{Animal.ImagenAnimal}{imagenes.extension}";
+
+                        byte[] fileByte = System.IO.File.ReadAllBytes(nombreImg);
+                        Animal.ImgBase64 = Convert.ToBase64String(fileByte);
+
+                    }
                     return Ok(animales);
                 }
 
                 return NotFound("Sin registros");
             }
-            catch
+            catch(Exception ex)
             {
+                
+                _logger.LogWarning("Error: " + ex.ToString());
+
+
                 return NotFound("Sin registros");
 
             }
@@ -168,7 +194,9 @@ namespace Proyecto_faunasilvestre.Controladores
                 if (Usuario == null)
                 {
 
-                    return NotFound("Usuario Inexistente");
+                        _logger.LogError($"Ocurrio un error al procesar al usuario con Id {Id}");
+
+                        return NotFound("Usuario Inexistente");
 
 
                 }
@@ -188,14 +216,17 @@ namespace Proyecto_faunasilvestre.Controladores
 
                  }
 
+                _logger.LogError($"Ocurrio un error en el servidor");
+
                 return NotFound();
             }
 
 
-            catch
+            catch( Exception ex)
             {
 
-                throw;
+                _logger.LogError("ERROR: " + ex.ToString());
+                return StatusCode(500);
 
 
 
@@ -206,7 +237,7 @@ namespace Proyecto_faunasilvestre.Controladores
         // Obtener Catalogo de Animal usando nombre Comun
 
 
-        [Authorize]
+       [Authorize]
        
         [HttpGet("ObtenerCatalogo{NombreComun}")]
 
@@ -221,13 +252,17 @@ namespace Proyecto_faunasilvestre.Controladores
                 if (CatalogoDeAnimal == null)
 
                 {
+
+
+                    _logger.LogError("ERROR: Catalogo no existe");
                     return NotFound("Catalogo inexistente");
                 }
 
                 return Ok(CatalogoDeAnimal);
             }
-            catch
+            catch ( Exception ex ) 
             {
+                _logger.LogError("ERROR: " + ex.ToString());
                 return BadRequest("Catalogo de Animales Inexistente en la base de datos");
             }
 
@@ -257,9 +292,10 @@ namespace Proyecto_faunasilvestre.Controladores
                 return Ok(catalogo);
 
             }
-            catch
+            catch( Exception ex)
             {
-                return BadRequest("Catalogo de Animales Inexistente en la base de datos");
+                _logger.LogError("ERROR: " + ex.ToString());
+                return StatusCode(500);
             }
 
         }
@@ -291,8 +327,10 @@ namespace Proyecto_faunasilvestre.Controladores
                 return Ok(animal);
             }
 
-            catch
+            catch(Exception ex)
             {
+
+                _logger.LogWarning("Error: " + ex.ToString());
                 return NoContent();
 
 
@@ -321,8 +359,9 @@ namespace Proyecto_faunasilvestre.Controladores
                return Ok(Total);
 
             }
-            catch
+            catch(Exception ex)
             {
+                _logger.LogWarning("Error: " + ex.ToString());
                 return BadRequest("Sin Usuarios o registros");
             }
 
@@ -330,13 +369,181 @@ namespace Proyecto_faunasilvestre.Controladores
 
 
 
+        [HttpPost("RegistrosAceptado{id}")]
+
+        public async Task<ActionResult<Contadores>> RegistrosAC(int id)
+        {
+
+            try
+            {
+
+                var Registro = await _animalServicio.RegistrosAC(id);
+
+                return Ok(Registro);
+
+            }
+            catch( Exception ex) 
+            {
+                _logger.LogError("ERROR: " + ex.ToString());
+                return StatusCode(500);
+            }
+
+        }
+
+
+
+        [HttpPost("Enviarcorreo")]
+
+        public async Task<ActionResult<Contadores>> EnviarCorreo(ModeloCorreoRechazado modeloCorreo)
+        {
+
+            try
+            {
+                var usuario = _contexDb.ModeloUsuarios.Where(A=> A.ModeloUsuarioId == modeloCorreo.modeloUsuarioId).FirstOrDefault();
+
+                if (usuario == null){
+                    _logger.LogError("ERROR:Correo no registrado");
+                    NotFound("Usuario no encontrado");
+                }
+
+                
+                string mensaje = "Hola este es un correo autogenerado, por favor de no responder " + "<br><br>" +
+                  "Lamento informarle que su registro fue rechazado debido a los siguientes criterios:" +
+                  "<br></br>" + modeloCorreo.Motivo + "<br></br>" +
+                  "Que tenga un buen día y disculpe las molestias";
+
+
+
+                await _recuperarcontra.enviarCorreo(new EmailMensaje
+                {
+                    Email =usuario.Email,
+                    Asunto = "Su registro fue rechazado",
+                    Mensaje = mensaje
+
+                });
+
+
+                return Ok();
+
+            }
+            catch(Exception ex)
+            {
+                _logger.LogError("ERROR: " + ex.ToString());
+                return StatusCode(500, "Ocurrio un error en el servidor, por favor intente de nuevo más tarde");
+            }
+
+        }
+
+
+        [HttpPost("RegistrosRechazado{id}")]
+
+        public async Task<ActionResult<Contadores>> RegistrosRE(int id)
+        {
+
+            try
+            {
+
+
+                var Registro = await _animalServicio.RegistrosRE(id);
+
+                return Ok(Registro);
+
+            }
+            catch(Exception ex)
+            {
+
+                _logger.LogError("ERROR: " + ex.ToString());
+                return StatusCode(500, "Ocurrio un error en el servidor, por favor intente más tarde");
+            }
+
+        }
 
 
 
 
+        [HttpGet("RegistrosEnespera")]
+
+        public async Task<ActionResult<Contadores>> EnEspera()
+        {
+
+            try
+            {
+                var imagenes = new ImagenesDTO();
+                _config.GetSection(ImagenesDTO.ImagenesSettings).Bind(imagenes);
+                var animales = await _animalServicio.BuscarAnimalesTemporal();
+
+                if (animales != null)
+                {
+
+                    foreach (var Animal in animales)
+                    {
+
+                        string nombreImg = $"{imagenes.Path}{Animal.ImagenAnimal}{imagenes.extension}";
+
+                        byte[] fileByte = System.IO.File.ReadAllBytes(nombreImg);
+                        Animal.ImgBase64 = Convert.ToBase64String(fileByte);
+
+                    }
+                    return Ok(animales);
+                }
+
+                return NotFound("Sin registros");
+            }
+            catch(Exception ex)
+            {
+
+                _logger.LogWarning("Error: " + ex.ToString());
+                return NotFound("Sin registros");
+
+            }
+
+        }
+
+
+
+        [HttpGet("RegistrosAceptados")]
+
+        public async Task<ActionResult<Contadores>> Aceptados()
+        {
+
+            try
+            {
+                var imagenes = new ImagenesDTO();
+                _config.GetSection(ImagenesDTO.ImagenesSettings).Bind(imagenes);
+                var animales = await _animalServicio.BuscarAnimalesAceptados();
+
+                if (animales != null)
+                {
+
+                    foreach (var Animal in animales)
+                    {
+
+                        string nombreImg = $"{imagenes.Path}{Animal.ImagenAnimal}{imagenes.extension}";
+
+                        byte[] fileByte = System.IO.File.ReadAllBytes(nombreImg);
+                        Animal.ImgBase64 = Convert.ToBase64String(fileByte);
+
+                    }
+                    return Ok(animales);
+                }
+
+                return NotFound("Sin registros");
+            }
+            catch(Exception ex)
+            {
+                _logger.LogError("ERROR: " + ex.ToString());
+                return StatusCode (500);
+
+            }
+
+        }
 
 
 
 
     }
+
+
+
+    
 }

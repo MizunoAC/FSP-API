@@ -15,12 +15,13 @@ namespace Proyecto_faunasilvestre.Controladores
     {
 
         private readonly ILoginServicio _loginServicio;
+        private readonly ILogger<LoginController> _logger;
 
 
-
-        public LoginController(ILoginServicio loginServicio)
+        public LoginController(ILoginServicio loginServicio, ILogger<LoginController> logger)
         {
-            _loginServicio= loginServicio; 
+            _loginServicio = loginServicio;
+            _logger = logger;
         }
 
         //Metodo para generar iniciar sesion
@@ -52,13 +53,15 @@ namespace Proyecto_faunasilvestre.Controladores
                 return Ok(tokenModel);
             }
 
-            catch(Excepcion3)
+            catch(Excepcion3 ex)
             {
+                _logger.LogError("ERROR: " + ex.ToString());
                 return BadRequest("Usuario no registrado");
             }
-            catch (Excepcion4)
+            catch (Excepcion4 ex)
             {
-              return  BadRequest("Contraseña incorrecta");
+                _logger.LogError("ERROR: " + ex.ToString());
+                return  BadRequest("Contraseña incorrecta");
             }
 
         }

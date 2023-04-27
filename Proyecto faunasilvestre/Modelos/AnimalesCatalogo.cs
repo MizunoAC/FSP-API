@@ -1,4 +1,7 @@
-﻿namespace Proyecto_faunasilvestre.Modelos
+﻿using Proyecto_faunasilvestre.Modelos.TablaTemporal;
+using System.ComponentModel.DataAnnotations.Schema;
+
+namespace Proyecto_faunasilvestre.Modelos
 {
     public class AnimalesCatalogo
     {
@@ -20,6 +23,7 @@
 
 
         public virtual List<ModeloAnimales>? ModeloAnimales { get; set; }
+        public virtual List<ModeloAnimalTemporal>? Temporales { get; set; }
 
 
 

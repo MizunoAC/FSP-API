@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Proyecto_faunasilvestre.Context;
 
@@ -11,9 +12,11 @@ using Proyecto_faunasilvestre.Context;
 namespace Proyecto_faunasilvestre.Migrations
 {
     [DbContext(typeof(ContexDb))]
-    partial class ContexDbModelSnapshot : ModelSnapshot
+    [Migration("20230410161330_tablatemporal")]
+    partial class tablatemporal
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -194,9 +197,6 @@ namespace Proyecto_faunasilvestre.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<bool>("Aceptado")
-                        .HasColumnType("bit");
-
                     b.Property<int>("AnimalesCatalogoId")
                         .HasColumnType("int");
 
@@ -234,9 +234,6 @@ namespace Proyecto_faunasilvestre.Migrations
                     b.Property<string>("Ubicacion")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("rechazado")
-                        .HasColumnType("bit");
 
                     b.HasKey("Id");
 
