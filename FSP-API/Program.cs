@@ -10,13 +10,12 @@ using System.Net.Mail;
 using System.Text;
 using NLog.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Data.SqlClient;
+using FSP.Infrastructure.Repository.Contracts;
+using FSP.Application.Repository;
+using FSP.Application.query;
 
 var builder = WebApplication.CreateBuilder(args);
-// Add services to the container.
-
-////////////////////////////////////////////////////////////////////////
-///
-
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("nuevapolitica", app =>
@@ -28,17 +27,15 @@ builder.Services.AddCors(options =>
     });
 });
 
+var config = new ConfigurationBuilder()
+    .AddJsonFile("appsettings.json")
+    .Build();
 
-///////////////////////////////////////////////////////////////////////
-///
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
+builder.Services.AddSingleton(new SqlConnection(connectionString));
 
-
-
-
-
-////////////////////////////////////////////////////////////////////////
-
+builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<AddUserCommandHandler>());
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -69,6 +66,7 @@ builder.Services.AddScoped<IUsuariosServicio, UsuariosServicio>();
 builder.Services.AddScoped<IAnimalServicio, AnimalServicio>();
 builder.Services.AddScoped<ILoginServicio, LoginServicio>();
 builder.Services.AddScoped<IRecuperarcontra, Recuperarcontra>();
+builder.Services.AddScoped<IUserRepository, UsersRepository>();
 
 
 builder.Host.ConfigureLogging((hostingContext, logging) =>

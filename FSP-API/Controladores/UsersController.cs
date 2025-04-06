@@ -1,66 +1,48 @@
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.ApplicationModels;
-using NLog.Fluent;
 using FSP_API.Context;
 using FSP_API.Excepcionescontroladas;
-using FSP_API.Modelos;
 using FSP_API.ModelosDTO;
 using FSP_API.Servicios;
+using FSP.Domain.Models;
+using FSP.Application.query;
+using MediatR;
 
 namespace FSP_API.Controladores
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class UsuarioController : ControllerBase
-
+    public class UsersController : ControllerBase
     {
+        private readonly IMediator _mediator;
         private readonly IUsuariosServicio _usuariosServicio;
         private readonly ContexDb _contextDb;
-        private readonly ILogger<UsuarioController> _logger;
+        private readonly ILogger<UsersController> _logger;
 
-        public UsuarioController(IUsuariosServicio usuariosServicio, ContexDb contextDb, ILogger<UsuarioController> logger)
+        public UsersController(IUsuariosServicio usuariosServicio, ContexDb contextDb, ILogger<UsersController> logger, IMediator mediator)
         {
             _usuariosServicio = usuariosServicio;
             _contextDb = contextDb;
             _logger = logger;
+            _mediator = mediator;
         }
 
-
-        //Agregar Nuevo Usuario
-
-        [HttpPost("AgregarUsuario")]
-
-        public async Task<ActionResult> AgregarUsuario(ModeloUsuarioDTO usuarioDTO)
+        [HttpPost("Register")]
+        public async Task<ActionResult> RegisterUser(UserModelRequest model)
         {
-
             try
             {
                 if (!ModelState.IsValid)
                 {
                     NoContent();
                 }
-
-                usuarioDTO.Edad = Convert.ToInt32(usuarioDTO.Edad);
-
-                var usuario = await _usuariosServicio.AgregarUsuarioDTO(usuarioDTO);
-                return Ok(usuario);
-
-
+                var result =  await _mediator.Send(new AddUserCommand(model));
+                return Ok(result);
             }
-
             catch( Excepcion ex)
             {
                 _logger.LogError("ERROR: " + ex.ToString());
-
-                return StatusCode(400, "El nombre de usuario ya existe en la base de datos, por favor elija otro");
-
+                throw ex;
             }
-
-        
-
-
         }
 
         // Obtener todos los Usuarios Registrados en la BD
