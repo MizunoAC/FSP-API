@@ -3,12 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using FSP.Application.Repository;
 using FSP.Domain.Models;
 using FSP.Infrastructure.Repository.Contracts;
 using MediatR;
 
-namespace FSP.Application.query
+namespace FSP.Application.command
 {
     public class AddUserCommand : IRequest<MessageResponse>
     {

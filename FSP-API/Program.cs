@@ -12,8 +12,8 @@ using NLog.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Data.SqlClient;
 using FSP.Infrastructure.Repository.Contracts;
-using FSP.Application.Repository;
-using FSP.Application.query;
+using FSP.Application.command;
+using FSP.Infrastructure.Repository;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddCors(options =>
@@ -56,11 +56,6 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
-
-
-////////////////////////////////////////////////////////////////////////
-
-
 builder.Services.AddDbContext<ContexDb>();
 builder.Services.AddScoped<IUsuariosServicio, UsuariosServicio>();
 builder.Services.AddScoped<IAnimalServicio, AnimalServicio>();
@@ -76,10 +71,6 @@ builder.Host.ConfigureLogging((hostingContext, logging) =>
 
 
 builder.Services.AddAutoMapper(typeof(Program));
-
-////////////////////////////////////////////////////////////////////////
-
-
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
@@ -94,16 +85,12 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-
-
 app.UseHttpsRedirection();
 
 app.UseCors(x => x
     .AllowAnyMethod()
     .AllowAnyHeader()
     .AllowAnyOrigin());
-
-
 
 app.UseAuthentication();
 app.UseAuthorization(); 

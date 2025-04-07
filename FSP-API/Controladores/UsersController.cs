@@ -4,8 +4,9 @@ using FSP_API.Excepcionescontroladas;
 using FSP_API.ModelosDTO;
 using FSP_API.Servicios;
 using FSP.Domain.Models;
-using FSP.Application.query;
 using MediatR;
+using FSP.Application.command;
+using FSP.Application.Query;
 
 namespace FSP_API.Controladores
 {
@@ -27,7 +28,7 @@ namespace FSP_API.Controladores
         }
 
         [HttpPost("Register")]
-        public async Task<ActionResult> RegisterUser(UserModelRequest model)
+        public async Task<ActionResult> RegisterUser([FromBody] UserModelRequest model)
         {
             try
             {
@@ -47,19 +48,18 @@ namespace FSP_API.Controladores
 
         // Obtener todos los Usuarios Registrados en la BD
 
-        [HttpGet("ObtenerUsuarios")]
+        [HttpDelete]
 
-        public async Task<ActionResult<IEnumerable<ModeloUsuarioDTO>>> Usuarios()
+        public async Task<ActionResult> DeleteUser([FromQuery] int userId)
         {
-
             try
             {
-
-                var User =
-
-               await _usuariosServicio.usuarios();
-
-                return Ok(User);
+                if (!ModelState.IsValid)
+                {
+                    NoContent();
+                }
+                var result = await _mediator.Send(new DeleteUserCommand(userId));
+                return Ok(result);
             }
             catch(Exception ex) { 
                 _logger.LogWarning("Error: " + ex.ToString());
@@ -69,23 +69,23 @@ namespace FSP_API.Controladores
 
         // Obtener un Usuario usando el Id autogenerado por la BD
 
-        [HttpGet("ObtenerUsuariosconId={ModeloUsuarioId}")]
+        [HttpGet("user-information")]
 
-        public async Task<ActionResult> BuscarUsuarioPorId(int ModeloUsuarioId)
+        public async Task<ActionResult> UserById ([FromQuery] int UserId)
         {
 
             try
             {
 
-                var usuarios = await _usuariosServicio.BuscarUsuarioPorId(ModeloUsuarioId);
+                var User = await _mediator.Send(new GetUserByIDQuery(UserId));
 
-                if (usuarios == null)
+                if (User == null)
                 {
-                    return BadRequest("Usuario Inexistente en la base de datos");
+                    return BadRequest("User Doesn't Exist");
                 }
 
 
-                return Ok(usuarios);
+                return Ok(User);
             }
             catch(Exception ex) {
                 _logger.LogWarning("Error: " + ex.ToString()); 
