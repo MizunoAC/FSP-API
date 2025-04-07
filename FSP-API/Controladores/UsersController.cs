@@ -1,7 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
 using FSP_API.Context;
-using FSP_API.Excepcionescontroladas;
-using FSP_API.ModelosDTO;
 using FSP_API.Servicios;
 using FSP.Domain.Models;
 using MediatR;
@@ -27,85 +25,67 @@ namespace FSP_API.Controladores
             _mediator = mediator;
         }
 
+        /// <summary>
+        /// Create a new user in the system.
+        /// </summary>
+        /// <param name="model">The object with the new user's data.</param>
+        /// <returns>Returns a confirmation message to find out if the user was added or if an error occurred while adding the user.</returns>
+        /// <response code="200">User created successfully.</response>
+        /// <response code="400">Invalid data.</response>
         [HttpPost("Register")]
         public async Task<ActionResult> RegisterUser([FromBody] UserModelRequest model)
         {
-            try
-            {
+      
                 if (!ModelState.IsValid)
                 {
-                    NoContent();
+                  return BadRequest(ModelState);
                 }
-                var result =  await _mediator.Send(new AddUserCommand(model));
-                return Ok(result);
-            }
-            catch( Excepcion ex)
-            {
-                _logger.LogError("ERROR: " + ex.ToString());
-                throw ex;
-            }
+            var command = new AddUserCommand(model);
+            var result =  await _mediator.Send(command);
+            return Ok(result);
         }
 
-        // Obtener todos los Usuarios Registrados en la BD
-
+        /// <summary>
+        /// logically deletes a user.
+        /// </summary>
+        /// <param name="model">The object with the UserId.</param>
+        /// <returns>Returns a confirmation message to determine if the user was deleted or if an error occurred while deleting the user.</returns>
+        /// <response code="200">User deleted successfully.</response>
+        /// <response code="400">Invalid data.</response>
         [HttpDelete]
-
         public async Task<ActionResult> DeleteUser([FromQuery] int userId)
         {
-            try
-            {
                 if (!ModelState.IsValid)
                 {
-                    NoContent();
+                   return BadRequest(ModelState);
                 }
-                var result = await _mediator.Send(new DeleteUserCommand(userId));
+                var command = new DeleteUserCommand(userId);
+                var result = await _mediator.Send(command);
                 return Ok(result);
-            }
-            catch(Exception ex) { 
-                _logger.LogWarning("Error: " + ex.ToString());
-                return NotFound("Sin registros"); 
-            }
         }
 
-        // Obtener un Usuario usando el Id autogenerado por la BD
-
+        /// <summary>
+        /// get a user information.
+        /// </summary>
+        /// <param name="model">The object with the UserId.</param>
+        /// <returns>returns an object with the user information.</returns>
+        /// <response code="200">UserModelDto</response>
+        /// <response code="400">Invalid data.</response>
         [HttpGet("user-information")]
-
         public async Task<ActionResult> UserById ([FromQuery] int UserId)
         {
-
-            try
+            if (!ModelState.IsValid)
             {
-
-                var User = await _mediator.Send(new GetUserByIDQuery(UserId));
+                return BadRequest(ModelState);
+            }
+            var query = new GetUserByIDQuery(UserId);
+            var User = await _mediator.Send(query);
 
                 if (User == null)
                 {
                     return BadRequest("User Doesn't Exist");
                 }
-
-
                 return Ok(User);
-            }
-            catch(Exception ex) {
-                _logger.LogWarning("Error: " + ex.ToString()); 
-                return NotFound("Sin registros"); 
-            
-            }
-
-
         }
-
-
-
-
-
-
     }
-
-
 }
-
-
-
-        
