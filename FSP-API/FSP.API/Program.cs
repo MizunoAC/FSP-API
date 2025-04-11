@@ -32,7 +32,7 @@ var config = new ConfigurationBuilder()
     .AddJsonFile("appsettings.json")
     .Build();
 
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+var connectionString = builder.Configuration.GetConnectionString("WebConnection");
 var rsa = RSA.Create();
 var dir = config["Jwt:PublicKeyPath"];
 rsa.ImportFromPem(File.ReadAllText(dir));
@@ -69,6 +69,7 @@ builder.Services.AddScoped<ILoginServicio, LoginServicio>();
 builder.Services.AddScoped<IRecuperarcontra, Recuperarcontra>();
 builder.Services.AddScoped<IUserRepository, UsersRepository>();
 builder.Services.AddScoped<IAuthenticationRepository, AuthenticationRepository>();
+builder.Services.AddScoped<IAnimalRepository, AnimalsRepository>();
 
 
 
