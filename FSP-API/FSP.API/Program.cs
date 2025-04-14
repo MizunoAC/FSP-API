@@ -1,13 +1,8 @@
-using FluentAssertions.Common;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.IdentityModel.Tokens;
 using FSP_API.Context;
 using FSP_API.Servicios;
 using FSP_API.Utilidades;
-using System.Configuration;
-using System.Net.Mail;
-using System.Text;
 using NLog.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Data.SqlClient;
@@ -15,6 +10,7 @@ using FSP.Infrastructure.Repository.Contracts;
 using FSP.Application.command;
 using FSP.Infrastructure.Repository;
 using System.Security.Cryptography;
+using FSP.Domain.Models.Wrapper;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddCors(options =>
@@ -41,8 +37,11 @@ var rsaSecurityKey = new RsaSecurityKey(rsa);
 
 builder.Services.AddSingleton(new SqlConnection(connectionString));
 
+builder.Services.AddSingleton(new DbConnectionConfig
+{
+    ConnectionString = connectionString
+});
 builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<AddUserCommandHandler>());
-
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -71,13 +70,10 @@ builder.Services.AddScoped<IUserRepository, UsersRepository>();
 builder.Services.AddScoped<IAuthenticationRepository, AuthenticationRepository>();
 builder.Services.AddScoped<IAnimalRepository, AnimalsRepository>();
 
-
-
 builder.Host.ConfigureLogging((hostingContext, logging) =>
 {
     logging.AddNLog();
 });
-
 
 builder.Services.AddAutoMapper(typeof(Program));
 builder.Services.AddControllers();
