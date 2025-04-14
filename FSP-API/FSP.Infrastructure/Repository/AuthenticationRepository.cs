@@ -1,35 +1,33 @@
 ﻿using Microsoft.Data.SqlClient;
 using FSP.Domain.Models;
 using FSP.Infrastructure.Repository.Contracts;
-using FSP.Domain.Models.DTO;
 using System.Data;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using Microsoft.Extensions.Configuration;
+using FSP.Domain.Models.Wrapper;
 
 namespace FSP.Infrastructure.Repository
 {
     public class AuthenticationRepository : IAuthenticationRepository
     {
-        private readonly SqlConnection _conn;
         private readonly IConfiguration _config;
+        private readonly string? _con;
 
-        // El constructor recibe la conexión inyectada
-        public AuthenticationRepository(SqlConnection connection, IConfiguration config)
+        public AuthenticationRepository(IConfiguration config, DbConnectionConfig con)
         {
             _config = config;
-            _conn = connection ?? throw new ArgumentNullException(nameof(connection), "Connection cannot be null.");
+            _con = con.ConnectionString;
+
         }
 
         public async Task<string> Authentication(UserAuthentication user)
         {
-            using (var cmd = new SqlCommand()) 
+            using (SqlConnection conn = new SqlConnection(_con))
+            using (var cmd = new SqlCommand("[dbo].[ValidateUserLogin]", conn))
             {
-
-                cmd.Connection = _conn;
-                cmd.CommandText = "[dbo].[ValidateUserLogin]";
                 cmd.CommandType = System.Data.CommandType.StoredProcedure;
                 cmd.Parameters.Clear();
                 cmd.Parameters.AddWithValue("@UserDomain", user.UserName);
@@ -45,24 +43,22 @@ namespace FSP.Infrastructure.Repository
                 };
                 cmd.Parameters.Add(validate);
 
-                await _conn.OpenAsync();
+                await conn.OpenAsync();
                 await cmd.ExecuteNonQueryAsync();
-                await _conn.CloseAsync();
+                await conn.CloseAsync();
 
                 if ((bool)validate.Value)
                 {
                     return this.TokenGenerationRS(userId.Value.ToString());
                 }
-                else         
+                else
                 {
-                    return "error";
+                    return "An error occurred while authenticating.";
                 }
-
-                //return (bool)validate.Value;
             }
-       
         }
-        public  string TokenGenerationRS(string User)
+
+        public string TokenGenerationRS(string User)
         {
             var rsa = RSA.Create();
             string path = _config["Jwt:PrivateKeyPath"];
@@ -74,6 +70,7 @@ namespace FSP.Infrastructure.Repository
             var claims = new[]
            {
                 new Claim(ClaimTypes.NameIdentifier, User),
+                new Claim(ClaimTypes.Role, "Admin")
            };
 
             var token = new JwtSecurityToken
@@ -84,7 +81,7 @@ namespace FSP.Infrastructure.Repository
                 expires: DateTime.Now.AddMinutes(10),
                 signingCredentials: credentials);
 
-            return  new JwtSecurityTokenHandler().WriteToken(token);
+            return new JwtSecurityTokenHandler().WriteToken(token);
         }
     }
 }

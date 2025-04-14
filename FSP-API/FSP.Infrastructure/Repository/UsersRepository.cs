@@ -2,26 +2,25 @@
 using FSP.Domain.Models;
 using FSP.Infrastructure.Repository.Contracts;
 using FSP.Domain.Models.DTO;
+using FSP.Domain.Models.Wrapper;
 
 namespace FSP.Infrastructure.Repository
 {
     public class UsersRepository : IUserRepository
     {
-        private readonly SqlConnection _conn;
+        private readonly string? _con;
 
-        // El constructor recibe la conexión inyectada
-        public UsersRepository(SqlConnection connection)
+        public UsersRepository(DbConnectionConfig con)
         {
-            _conn = connection ?? throw new ArgumentNullException(nameof(connection), "Connection cannot be null.");
+            _con = con.ConnectionString;
         }
         public async Task<MessageResponse> RegisterNewUser(UserModelRequest model)
         {
 
             var result = new MessageResponse();
-            using (var cmd = new SqlCommand())
+            using (SqlConnection conn = new SqlConnection(_con))
+            using (var cmd = new SqlCommand("[dbo].[InsertNewUserApp]", conn))
             {
-                cmd.Connection = _conn;
-                cmd.CommandText = "[dbo].[InsertNewUserApp]";
                 cmd.CommandType = System.Data.CommandType.StoredProcedure;
                 cmd.Parameters.Clear();
                 cmd.Parameters.AddWithValue("@UserName", model.UserName);
@@ -33,8 +32,7 @@ namespace FSP.Infrastructure.Repository
                 cmd.Parameters.AddWithValue("@Email", model.Email);
                 cmd.Parameters.AddWithValue("@Locality", model.Locality);
 
-                await _conn.OpenAsync();
-
+                await conn.OpenAsync();
                 var reader = await cmd.ExecuteReaderAsync();
 
                 while (await reader.ReadAsync())
@@ -43,7 +41,7 @@ namespace FSP.Infrastructure.Repository
                     bool.TryParse(reader["IsError"].ToString(), out bool error);
                     result.Error = error;
                 }
-                await _conn.CloseAsync();
+                await conn.CloseAsync();
                 await reader.DisposeAsync();
             }
             return result;
@@ -52,17 +50,14 @@ namespace FSP.Infrastructure.Repository
         public async Task<UserModelDto> GetUserByID(string UserId)
         {
             var user = new UserModelDto();
-
-            using (var cmd = new SqlCommand()) 
+            using (SqlConnection conn = new SqlConnection(_con))
+            using (var cmd = new SqlCommand("[dbo].[GetUserById]", conn)) 
             {
-
-                cmd.Connection = _conn;
-                cmd.CommandText = "[dbo].[GetUserById]";
                 cmd.CommandType = System.Data.CommandType.StoredProcedure;
                 cmd.Parameters.Clear();
                 cmd.Parameters.AddWithValue("@UserId", UserId);
 
-                await _conn.OpenAsync();
+                await conn.OpenAsync();
                 var reader = await cmd.ExecuteReaderAsync();
 
                 while (await reader.ReadAsync()) 
@@ -77,7 +72,7 @@ namespace FSP.Infrastructure.Repository
                     user.Email = reader["Email"].ToString();
                 }
 
-                await _conn.CloseAsync();
+                await conn.CloseAsync();
                 await reader.DisposeAsync();
             }
             return user;
@@ -86,16 +81,14 @@ namespace FSP.Infrastructure.Repository
         public async Task<MessageResponse> DeleteUser(int UserId)
         {
             var result = new MessageResponse();
-            using (var cmd = new SqlCommand())
+            using (SqlConnection conn = new SqlConnection(_con))
+            using (var cmd = new SqlCommand("[dbo].[DeleteUserApp]", conn))
             {
-                cmd.Connection = _conn;
-                cmd.CommandText = "[dbo].[DeleteUserApp]";
                 cmd.CommandType = System.Data.CommandType.StoredProcedure;
                 cmd.Parameters.Clear();
                 cmd.Parameters.AddWithValue("@UserId", UserId);
 
-                await _conn.OpenAsync();
-
+                await conn.OpenAsync();
                 var reader = await cmd.ExecuteReaderAsync();
 
                 while (await reader.ReadAsync())
@@ -104,7 +97,7 @@ namespace FSP.Infrastructure.Repository
                     bool.TryParse(reader["IsError"].ToString(), out bool error);
                     result.Error = error;
                 }
-                await _conn.CloseAsync();
+                await conn.CloseAsync();
                 await reader.DisposeAsync();
             }
             return result;

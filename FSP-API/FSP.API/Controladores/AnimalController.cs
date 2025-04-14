@@ -1,23 +1,17 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Server.IIS.Core;
-using Microsoft.EntityFrameworkCore;
 using FSP_API.Context;
-using FSP_API.Excepcionescontroladas;
-using FSP_API.Modelos;
 using FSP_API.Modelos.ViewModel;
 using FSP_API.ModelosDTO;
 using FSP_API.Servicios;
 using FSP_API.Utilidades;
-using System;
-using System.Drawing;
 using System.Security.Claims;
-using System.Web.Http.Results;
 using FSP.Domain.Models;
 using FSP.Application.command;
 using MediatR;
+using FSP.Application.Query;
+using FSP.Application.Command;
 
 namespace FSP_API.Controladores
 {
@@ -46,13 +40,22 @@ namespace FSP_API.Controladores
             _mediator = mediator;
         }
 
-        // Agregar nuevo animal cuando el usuario inicie sesion
+        #region UserAnimalRecord
+
+        /// <summary>
+        /// creates a new record for the user.
+        /// </summary>
+        /// <param name="record">The object with the new record data.</param>
+        /// <returns>Returns a confirmation message to let you know if the record was added or if an error occurred while adding it.</returns>
+        /// <response code="200">User created successfully.</response>
+        /// <response code="400">Invalid data.</response>
+        /// <response code="401">Unauthorized.</response>
         [Authorize]
         [HttpPost("NewRecord")]
-        public async Task<IActionResult> NewRecord(AnimalRecordRequest record)
+        public async Task<IActionResult> NewRecord( [FromBody] AnimalRecordRequest record)
         {
             var UserId = this.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-           
+
             if (UserId == null)
             {
                 return Unauthorized();
@@ -70,233 +73,110 @@ namespace FSP_API.Controladores
 
             //    var imag = ($"{imagenes.Path}" + $"{guid}" + $"{imagenes.extension}");
 
-                //image.Save($"{ imagenes.Path}" + $"{guid}"  + $"{imagenes.extension}"
-                //    , System.Drawing.Imaging.ImageFormat.Jpeg);
+            //image.Save($"{ imagenes.Path}" + $"{guid}"  + $"{imagenes.extension}"
+            //    , System.Drawing.Imaging.ImageFormat.Jpeg);
 
-            }
-            // Generar lista de animales completa, todos los usuarios 
-
-            [HttpGet("ObtenerAnimal")]
-
-        public async Task<ActionResult<IEnumerable<ModeloAnimalesDTO>>> BuscarAnimales()
-        {
-
-            try
-            {
-                var imagenes = new ImagenesDTO();
-                _config.GetSection(ImagenesDTO.ImagenesSettings).Bind(imagenes);
-                var animales = await _animalServicio.BuscarAnimales();
-
-                if (animales != null)
-                {
-
-                    foreach (var Animal in animales)
-                    {
-
-                        string nombreImg = $"{imagenes.Path}{Animal.ImagenAnimal}{imagenes.extension}";
-
-                        byte[] fileByte = System.IO.File.ReadAllBytes(nombreImg);
-                        Animal.ImgBase64 = Convert.ToBase64String(fileByte);
-
-                    }
-                    return Ok(animales);
-                }
-
-                return NotFound("Sin registros");
-            }
-            catch (Exception ex)
-            {
-
-                _logger.LogWarning("Error: " + ex.ToString());
-
-
-                return NotFound("Sin registros");
-
-            }
         }
 
-        // Generar la lista de registros del usuario
+        /// <summary>
+        /// Retrieves a list of records that a user has created.
+        /// </summary>
+        /// <param name="recordStatus">the status of the records Accepted, Rejected or Pending.</param>
+        /// <returns>Returns a list of records that a user has created depending on the status it is in.</returns>
+        /// <response code="200">List<AnimalRecordDto>.</response>
+        /// <response code="400">Invalid data.</response>
+        /// <response code="401">Unauthorized.</response>
+        [HttpGet("AnimalRecordByUser/{recordStatus}")]
+        public async Task<IActionResult> GetRecordsByUser([FromRoute] string recordStatus)
+        {
+            var UserId = this.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
+            if (UserId == null || recordStatus == null)
+            {
+                return Unauthorized();
+            }
+
+            var query = new GetAnimalRecordByUserQuery(UserId, recordStatus);
+            var result = await _mediator.Send(query);
+            return Ok(result);
+        }
+
+        #endregion
+
+        #region AnimalIndex
+
+        /// <summary>
+        /// Retrieves a list of records that a user has created.
+        /// </summary>
+        /// <param name="AnimalIndexRequest">the object with the data of the new index to add.</param>
+        /// <returns>Returns a confirmation message to let you know if the Indexwas added or if an error occurred while adding it.</returns>
+        /// <response code="200">MessageResponse.</response>
+        /// <response code="400">Invalid data.</response>
+        /// <response code="401">Unauthorized.</response>
+        [Authorize(Roles = "Admin")]
+        [HttpPost("new-catalog")]
+        public async Task<ActionResult> AddNewAnimalCatalog([FromBody] CatalogRequest model)
+        {
+            var UserId = this.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (UserId == null)
+            {
+                return Unauthorized();
+            }
+
+            var command = new AddNewCatalogCommand(model);
+            var result = await _mediator.Send(command);
+            return Ok(result);
+        }
+
+        /// <summary>
+        /// Retrieves the catalog of animals in the database.
+        /// </summary>
+        /// <returns>List<CatalogDto></returns>
+        /// <response code="200">MessageResponse.</response>
+        /// <response code="400">Invalid data.</response>
+        /// <response code="401">Unauthorized.</response>
         [Authorize]
-
-        [HttpGet("ObtenerRegistroAnimales")]
-
-        public async Task<ActionResult<IEnumerable<ModeloAnimales>>> BuscarAnimalesPorUsuario()
+        [HttpGet("Catalog")]
+        public async Task<IActionResult> GetCatalog()
         {
-
-            try
+            var UserId = this.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (UserId == null)
             {
-
-                var imagenes = new ImagenesDTO();
-                _config.GetSection(ImagenesDTO.ImagenesSettings).Bind(imagenes);
-                var identity = HttpContext.User.Identity as ClaimsIdentity;
-
-
-                if (identity != null)
-                {
-
-                    var Id = HttpContext.User.FindFirstValue("Id");
-
-
-                    var ModeloUsuarioId = Convert.ToInt32(Id);
-
-
-                    var Usuario = _usuariosServicio.BuscarAnimalPorUsuario(ModeloUsuarioId);
-
-
-                    if (Usuario == null)
-                    {
-
-                        _logger.LogError($"Ocurrio un error al procesar al usuario con Id {Id}");
-
-                        return NotFound("Usuario Inexistente");
-
-
-                    }
-
-                    var Animales = await _animalServicio.BuscarAnimalesPorUsuario(ModeloUsuarioId);
-                    foreach (var Animal in Animales)
-                    {
-
-                        string nombreImg = $"{imagenes.Path}{Animal.ImagenAnimal}{imagenes.extension}";
-
-                        byte[] fileByte = System.IO.File.ReadAllBytes(nombreImg);
-                        Animal.ImgBase64 = Convert.ToBase64String(fileByte);
-
-                    }
-
-                    return Ok(Animales);
-
-                }
-
-                _logger.LogError($"Ocurrio un error en el servidor");
-
-                return NotFound();
+                return Unauthorized();
             }
 
-
-            catch (Exception ex)
-            {
-
-                _logger.LogError("ERROR: " + ex.ToString());
-                return StatusCode(500);
-
-
-
-            }
-
+            var query = new GetCatalogQuery();
+            var result = await _mediator.Send(query);
+            return Ok(result);
         }
 
-        // Obtener Catalogo de Animal usando nombre Comun
-
-
+        /// <summary>
+        /// Retrieves a catalog using the animal's common noun as a filter.
+        /// </summary>
+        /// <returns><CatalogDto></returns>
+        /// <response code="200">MessageResponse.</response>
+        /// <response code="400">Invalid data.</response>
+        /// <response code="401">Unauthorized.</response>
         [Authorize]
+        [HttpGet("byCommonNoun/{CommonNoun}")]
 
-        [HttpGet("ObtenerCatalogo{NombreComun}")]
-
-        public async Task<ActionResult<AnimalesCatalogoDTO>> ObtenerAnimaldeCatalogo(string NombreComun)
+        public async Task<IActionResult> GetCatalogByCommonNoun([FromRoute] string CommonNoun)
         {
 
-            try
+            var UserId = this.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (UserId == null)
             {
-                var CatalogoDeAnimal = await _animalServicio.BuscarAnimalesCatalogo
-                      (NombreComun);
-
-                if (CatalogoDeAnimal == null)
-
-                {
-
-
-                    _logger.LogError("ERROR: Catalogo no existe");
-                    return NotFound("Catalogo inexistente");
-                }
-
-                return Ok(CatalogoDeAnimal);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError("ERROR: " + ex.ToString());
-                return BadRequest("Catalogo de Animales Inexistente en la base de datos");
+                return Unauthorized();
             }
 
+            var query = new GetCatalogByCommonNounQuery(CommonNoun);
+            var result = await _mediator.Send(query);
+            return Ok(result);
         }
 
-        // pantalla de inicio de la aplicacion 
-
-
-        [Authorize]
-        [HttpGet("Inicio")]
-
-        public async Task<ActionResult<IEnumerable<AnimalesCatalogoDTO>>> AnimalesenBasedeDatos()
-        {
-
-            try
-            {
-
-
-                var catalogo = await _animalServicio.AnimalesenCatalogo();
-
-                if (catalogo == null)
-                {
-                    return NotFound("Sin registros");
-                }
-
-
-                return Ok(catalogo);
-
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError("ERROR: " + ex.ToString());
-                return StatusCode(500);
-            }
-
-        }
-
-
-
-
-
-        //////////////////////////////////////////////////////
-        ///
-
-
-        // Agregar Catalogo de Animales (Temporal)
-
-        [HttpPost("AgregarAnimalCatalogo")]
-
-        public async Task<ActionResult> AgregarCatalogo(AnimalesCatalogo animalesCatalogo)
-        {
-
-            try
-            {
-                if (!ModelState.IsValid)
-                {
-                    NoContent();
-                }
-
-                var animal = await _animalServicio.AgregarCatalogo(animalesCatalogo);
-
-                return Ok(animal);
-            }
-
-            catch (Exception ex)
-            {
-
-                _logger.LogWarning("Error: " + ex.ToString());
-                return NoContent();
-
-
-            }
-
-
-        }
-
-
-        /////////////////////////////////////////////////////
-
-
-
+        #endregion
 
         [HttpGet("Contador")]
 
@@ -320,8 +200,6 @@ namespace FSP_API.Controladores
 
         }
 
-
-
         [HttpPost("RegistrosAceptado{id}")]
 
         public async Task<ActionResult<Contadores>> RegistrosAC(int id)
@@ -342,8 +220,6 @@ namespace FSP_API.Controladores
             }
 
         }
-
-
 
         [HttpPost("Enviarcorreo")]
 
@@ -388,7 +264,6 @@ namespace FSP_API.Controladores
 
         }
 
-
         [HttpPost("RegistrosRechazado{id}")]
 
         public async Task<ActionResult<Contadores>> RegistrosRE(int id)
@@ -411,9 +286,6 @@ namespace FSP_API.Controladores
             }
 
         }
-
-
-
 
         [HttpGet("RegistrosEnespera")]
 
@@ -453,8 +325,6 @@ namespace FSP_API.Controladores
 
         }
 
-
-
         [HttpGet("RegistrosAceptados")]
 
         public async Task<ActionResult<Contadores>> Aceptados()
@@ -491,13 +361,5 @@ namespace FSP_API.Controladores
             }
 
         }
-
-
-
-
     }
-
-
-
-
 }

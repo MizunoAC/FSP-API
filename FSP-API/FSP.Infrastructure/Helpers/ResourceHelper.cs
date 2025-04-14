@@ -4,26 +4,27 @@ namespace FSP.Domain.Helpers
 {
     public class ResourceHelper
     {
-            public static string? GetResource(string fileName)
-            {
-                if (string.IsNullOrWhiteSpace(fileName) ||
-                    !fileName.EndsWith(".sql", StringComparison.OrdinalIgnoreCase))
-                    return null;
+        public static string? GetResource(string fileName)
+        {
+            if (string.IsNullOrWhiteSpace(fileName))
+                return null;
 
-                var assembly = Assembly.GetExecutingAssembly();
-                var resourceName = assembly
-                    .GetManifestResourceNames()
-                    .FirstOrDefault(name =>
-                        name.EndsWith(fileName, StringComparison.OrdinalIgnoreCase));
+            var assembly = Assembly.GetExecutingAssembly();
+            var resourceNames = assembly.GetManifestResourceNames();
 
-                if (resourceName == null)
-                    return null;
+            var resourceName = resourceNames
+                .FirstOrDefault(name =>
+                    name.Contains(".sql.", StringComparison.OrdinalIgnoreCase) &&
+                    name.EndsWith($"{fileName}.sql", StringComparison.OrdinalIgnoreCase));
 
-                using var stream = assembly.GetManifestResourceStream(resourceName);
-                if (stream == null) return null;
+            if (resourceName == null)
+                return null;
 
-                using var reader = new StreamReader(stream);
-                return reader.ReadToEnd();
-            }
+            using var stream = assembly.GetManifestResourceStream(resourceName);
+            if (stream == null) return null;
+
+            using var reader = new StreamReader(stream);
+            return reader.ReadToEnd();
+        }
     }
 }
