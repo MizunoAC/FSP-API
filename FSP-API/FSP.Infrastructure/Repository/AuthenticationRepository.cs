@@ -8,6 +8,7 @@ using System.Security.Claims;
 using System.Security.Cryptography;
 using Microsoft.Extensions.Configuration;
 using FSP.Domain.Models.Wrapper;
+using FSP.Domain.Enums;
 
 namespace FSP.Infrastructure.Repository
 {
@@ -42,6 +43,11 @@ namespace FSP.Infrastructure.Repository
                     Direction = ParameterDirection.Output
                 };
                 cmd.Parameters.Add(validate);
+                var userTypesp = new SqlParameter("@UserType", SqlDbType.Int)
+                {
+                    Direction = ParameterDirection.Output
+                };
+                cmd.Parameters.Add(userTypesp);
 
                 await conn.OpenAsync();
                 await cmd.ExecuteNonQueryAsync();
@@ -49,7 +55,8 @@ namespace FSP.Infrastructure.Repository
 
                 if ((bool)validate.Value)
                 {
-                    return this.TokenGenerationRS(userId.Value.ToString());
+                    UserType userType = (UserType)userTypesp.Value;
+                    return this.TokenGenerationRS(userId.Value.ToString(), userType);
                 }
                 else
                 {
@@ -58,7 +65,7 @@ namespace FSP.Infrastructure.Repository
             }
         }
 
-        public string TokenGenerationRS(string User)
+        public string TokenGenerationRS(string User, UserType userType)
         {
             var rsa = RSA.Create();
             string path = _config["Jwt:PrivateKeyPath"];
@@ -70,7 +77,7 @@ namespace FSP.Infrastructure.Repository
             var claims = new[]
            {
                 new Claim(ClaimTypes.NameIdentifier, User),
-                new Claim(ClaimTypes.Role, "Admin")
+                new Claim(ClaimTypes.Role,userType.ToString() )
            };
 
             var token = new JwtSecurityToken

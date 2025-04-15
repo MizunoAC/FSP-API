@@ -8,5 +8,6 @@ namespace FSP.Infrastructure.Repository.Contracts
         Task<MessageResponse> RegisterNewUser(UserModelRequest model);
         Task<UserModelDto> GetUserByID(string id);
         Task<MessageResponse> DeleteUser(int UserId);
+        Task<CountDto> Count();
     }
 }

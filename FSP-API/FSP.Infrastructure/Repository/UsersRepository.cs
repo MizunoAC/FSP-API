@@ -3,6 +3,7 @@ using FSP.Domain.Models;
 using FSP.Infrastructure.Repository.Contracts;
 using FSP.Domain.Models.DTO;
 using FSP.Domain.Models.Wrapper;
+using FSP.Domain.Helpers;
 
 namespace FSP.Infrastructure.Repository
 {
@@ -101,6 +102,31 @@ namespace FSP.Infrastructure.Repository
                 await reader.DisposeAsync();
             }
             return result;
+        }
+
+        public async Task<CountDto> Count()
+        {
+            var result = new CountDto();
+            var sql = ResourceHelper.GetResource("GetCount");
+            using (SqlConnection conn = new SqlConnection(_con))
+            using (var cmd = new SqlCommand(sql, conn))
+            {
+                cmd.CommandType = System.Data.CommandType.Text;
+                cmd.Parameters.Clear();
+
+                await conn.OpenAsync();
+                var reader = await cmd.ExecuteReaderAsync();
+
+                while (await reader.ReadAsync())
+                {
+                    int.TryParse(reader["Records"].ToString(), out int records);
+                    result.Records = records;
+                    int.TryParse(reader["Users"].ToString(), out int users);
+                    result.Users = users;
+
+                }
+            }
+                return result;
         }
     }
 }

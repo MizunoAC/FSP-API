@@ -83,6 +83,39 @@ namespace FSP.Infrastructure.Repository
             return results;
         }
 
+        public async Task<List<AnimalRecordDto>> GetAllRecords(string recordStatus)
+        {
+            var results = new List<AnimalRecordDto>();
+            var sql = ResourceHelper.GetResource("GetAllRecords");
+
+            using (SqlConnection conn = new SqlConnection(_conn))
+            using (var cmd = new SqlCommand(sql, conn))
+            {
+                cmd.CommandType = System.Data.CommandType.Text;
+                cmd.Parameters.Clear();
+                cmd.Parameters.AddWithValue("@RecordStatus", recordStatus);
+                await conn.OpenAsync();
+
+                var reader = await cmd.ExecuteReaderAsync();
+
+                while (await reader.ReadAsync())
+                {
+                    int.TryParse(reader["RecordId"].ToString(), out int recordId);
+                    results.Add(new AnimalRecordDto
+                    {
+                        RecordId = recordId,
+                        CommonNoun = reader["CommonNoun"].ToString(),
+                        AnimalState = reader["AnimalState"].ToString(),
+                        Description = reader["Description"].ToString(),
+                        Location = reader["Location"].ToString()
+                    });
+                }
+                await conn.CloseAsync();
+                await reader.DisposeAsync();
+            }
+            return results;
+        }
+
         #endregion
 
         #region Catalog
@@ -90,6 +123,9 @@ namespace FSP.Infrastructure.Repository
         public async Task<MessageResponse> InsertNewCatalog(CatalogRequest model)
         {
             var result = new MessageResponse();
+            string base64String = model.Image;
+            byte[] imagenBytes = Convert.FromBase64String(base64String);
+
             using (SqlConnection conn = new SqlConnection(_conn))
             using (var cmd = new SqlCommand("[dbo].[InsertNewAnimalCatalog]", conn))
             {
@@ -105,7 +141,7 @@ namespace FSP.Infrastructure.Repository
                 cmd.Parameters.AddWithValue("@Feeding", model.Feeding);
                 cmd.Parameters.AddWithValue("@Category", model.Category);
                 cmd.Parameters.AddWithValue("@Map", model.Map);
-                cmd.Parameters.AddWithValue("@Image", model.Image);
+                cmd.Parameters.AddWithValue("@Image", imagenBytes);
 
                 await conn.OpenAsync();
                 var reader = await cmd.ExecuteReaderAsync();
@@ -131,9 +167,11 @@ namespace FSP.Infrastructure.Repository
                 cmd.CommandType = CommandType.Text;
                 await conn.OpenAsync();
                 var reader = await cmd.ExecuteReaderAsync();
-
                 while (await reader.ReadAsync())
                 {
+                    var binaryData = (byte[])reader["Image"];
+                    var base64String = Convert.ToBase64String(binaryData);
+                    var base64Image = $"data:image/jpeg;base64,{base64String}";
                     results.Add(new CatalogDto
                     {
                         Specie = reader["Specie"].ToString(),
@@ -145,7 +183,7 @@ namespace FSP.Infrastructure.Repository
                         Distribution = reader["Distribution"].ToString(),
                         Feeding = reader["Feeding"].ToString(),
                         Category = reader["Category"].ToString(),
-                        Image = reader["Image"].ToString(),
+                        Image = base64Image,
                         Map = reader["Map"].ToString()
                     });
                 }

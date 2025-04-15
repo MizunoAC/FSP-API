@@ -64,18 +64,6 @@ namespace FSP_API.Controladores
             var command = new AddRecordAnimalCommand(record, UserId);
             var result = await _mediator.Send(command);
             return Ok(result);
-
-
-            //byte[] img = Convert.FromBase64String(animalDTO.ImagenAnimal);
-            //using (MemoryStream ms = new MemoryStream(img))
-            //{
-            //    //Image image = Image.FromStream(ms);
-
-            //    var imag = ($"{imagenes.Path}" + $"{guid}" + $"{imagenes.extension}");
-
-            //image.Save($"{ imagenes.Path}" + $"{guid}"  + $"{imagenes.extension}"
-            //    , System.Drawing.Imaging.ImageFormat.Jpeg);
-
         }
 
         /// <summary>
@@ -86,6 +74,7 @@ namespace FSP_API.Controladores
         /// <response code="200">List<AnimalRecordDto>.</response>
         /// <response code="400">Invalid data.</response>
         /// <response code="401">Unauthorized.</response>
+        [Authorize]
         [HttpGet("AnimalRecordByUser/{recordStatus}")]
         public async Task<IActionResult> GetRecordsByUser([FromRoute] string recordStatus)
         {
@@ -160,7 +149,6 @@ namespace FSP_API.Controladores
         /// <response code="401">Unauthorized.</response>
         [Authorize]
         [HttpGet("byCommonNoun/{CommonNoun}")]
-
         public async Task<IActionResult> GetCatalogByCommonNoun([FromRoute] string CommonNoun)
         {
 
@@ -178,47 +166,30 @@ namespace FSP_API.Controladores
 
         #endregion
 
-        [HttpGet("Contador")]
 
-        public async Task<ActionResult<Contadores>> Contador()
+        /// <summary>
+        /// Retrieves a list of records that a user has created.
+        /// </summary>
+        /// <param name="recordStatus">the status of the records Accepted, Rejected or Pending.</param>
+        /// <returns>Returns a list of records that a user has created depending on the status it is in.</returns>
+        /// <response code="200">List<AnimalRecordDto>.</response>
+        /// <response code="400">Invalid data.</response>
+        /// <response code="401">Unauthorized.</response>
+        [Authorize(Roles = "Admin")]
+        [HttpGet("all-records/{recordStatus}")]
+
+        public async Task<IActionResult> GetAllRecords([FromRoute] string recordStatus)
         {
+            var UserId = this.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-            try
+            if (UserId == null || recordStatus == null)
             {
-
-
-                var Total = await _animalServicio.contador();
-
-                return Ok(Total);
-
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning("Error: " + ex.ToString());
-                return BadRequest("Sin Usuarios o registros");
+                return Unauthorized();
             }
 
-        }
-
-        [HttpPost("RegistrosAceptado{id}")]
-
-        public async Task<ActionResult<Contadores>> RegistrosAC(int id)
-        {
-
-            try
-            {
-
-                var Registro = await _animalServicio.RegistrosAC(id);
-
-                return Ok(Registro);
-
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError("ERROR: " + ex.ToString());
-                return StatusCode(500);
-            }
-
+            var query = new GetAllAnimalRecordQuery(recordStatus);
+            var result = await _mediator.Send(query);
+            return Ok(result);
         }
 
         [HttpPost("Enviarcorreo")]

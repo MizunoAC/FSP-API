@@ -10,5 +10,6 @@ namespace FSP.Infrastructure.Repository.Contracts
         Task<MessageResponse> InsertNewCatalog(CatalogRequest model);
         Task<List<CatalogDto>> GetCatalog();
         Task<CatalogDto> GetCatalogByCommonNoun(string commonNoun);
+        Task<List<AnimalRecordDto>> GetAllRecords(string recordStatus);
     }
 }
