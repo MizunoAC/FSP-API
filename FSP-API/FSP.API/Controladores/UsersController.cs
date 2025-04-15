@@ -50,7 +50,7 @@ namespace FSP_API.Controladores
         /// <summary>
         /// logically deletes a user.
         /// </summary>
-        /// <param name="model">The object with the UserId.</param>
+        /// <param name="userId">The object with the UserId.</param>
         /// <returns>Returns a confirmation message to determine if the user was deleted or if an error occurred while deleting the user.</returns>
         /// <response code="200">User deleted successfully.</response>
         /// <response code="400">Invalid data.</response>
@@ -69,7 +69,6 @@ namespace FSP_API.Controladores
         /// <summary>
         /// get a user information.
         /// </summary>
-        /// <param name="model">The object with the UserId.</param>
         /// <returns>returns an object with the user information.</returns>
         /// <response code="200">UserModelDto</response>
         /// <response code="400">Invalid data.</response>
@@ -91,6 +90,27 @@ namespace FSP_API.Controladores
                     return BadRequest("User Doesn't Exist");
                 }
                 return Ok(User);
+        }
+
+        /// <summary>
+        /// get the total number of users and records in the database.
+        /// </summary>
+        /// <returns>returns an object with the total number of users and records.</returns>
+        /// <response code="200">UserModelDto</response>
+        /// <response code="400">Invalid data.</response>
+        [Authorize]
+        [HttpGet("counts")]
+        public async Task<IActionResult> Counts()
+        {
+            var UserId = this.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+            var query = new GetCountQuery();
+            var result = await _mediator.Send(query);
+            return Ok(result);
         }
     }
 }

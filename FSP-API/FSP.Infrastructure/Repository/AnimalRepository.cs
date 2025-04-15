@@ -83,6 +83,39 @@ namespace FSP.Infrastructure.Repository
             return results;
         }
 
+        public async Task<List<AnimalRecordDto>> GetAllRecords(string recordStatus)
+        {
+            var results = new List<AnimalRecordDto>();
+            var sql = ResourceHelper.GetResource("GetAllRecords");
+
+            using (SqlConnection conn = new SqlConnection(_conn))
+            using (var cmd = new SqlCommand(sql, conn))
+            {
+                cmd.CommandType = System.Data.CommandType.Text;
+                cmd.Parameters.Clear();
+                cmd.Parameters.AddWithValue("@RecordStatus", recordStatus);
+                await conn.OpenAsync();
+
+                var reader = await cmd.ExecuteReaderAsync();
+
+                while (await reader.ReadAsync())
+                {
+                    int.TryParse(reader["RecordId"].ToString(), out int recordId);
+                    results.Add(new AnimalRecordDto
+                    {
+                        RecordId = recordId,
+                        CommonNoun = reader["CommonNoun"].ToString(),
+                        AnimalState = reader["AnimalState"].ToString(),
+                        Description = reader["Description"].ToString(),
+                        Location = reader["Location"].ToString()
+                    });
+                }
+                await conn.CloseAsync();
+                await reader.DisposeAsync();
+            }
+            return results;
+        }
+
         #endregion
 
         #region Catalog
