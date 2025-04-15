@@ -160,7 +160,6 @@ namespace FSP_API.Controladores
         /// <response code="401">Unauthorized.</response>
         [Authorize]
         [HttpGet("byCommonNoun/{CommonNoun}")]
-
         public async Task<IActionResult> GetCatalogByCommonNoun([FromRoute] string CommonNoun)
         {
 

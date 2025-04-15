@@ -1,10 +1,11 @@
-﻿using FSP.Domain.Models;
+﻿using FSP.Domain.Enums;
+using FSP.Domain.Models;
 
 namespace FSP.Infrastructure.Repository.Contracts
 {
     public interface IAuthenticationRepository
     {
         Task<string> Authentication(UserAuthentication user);
-        string TokenGenerationRS(string User);
+        string TokenGenerationRS(string User, UserType userType);
     }
 }

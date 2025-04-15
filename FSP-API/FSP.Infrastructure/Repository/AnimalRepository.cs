@@ -90,6 +90,9 @@ namespace FSP.Infrastructure.Repository
         public async Task<MessageResponse> InsertNewCatalog(CatalogRequest model)
         {
             var result = new MessageResponse();
+            string base64String = model.Image;
+            byte[] imagenBytes = Convert.FromBase64String(base64String);
+
             using (SqlConnection conn = new SqlConnection(_conn))
             using (var cmd = new SqlCommand("[dbo].[InsertNewAnimalCatalog]", conn))
             {
@@ -105,7 +108,7 @@ namespace FSP.Infrastructure.Repository
                 cmd.Parameters.AddWithValue("@Feeding", model.Feeding);
                 cmd.Parameters.AddWithValue("@Category", model.Category);
                 cmd.Parameters.AddWithValue("@Map", model.Map);
-                cmd.Parameters.AddWithValue("@Image", model.Image);
+                cmd.Parameters.AddWithValue("@Image", imagenBytes);
 
                 await conn.OpenAsync();
                 var reader = await cmd.ExecuteReaderAsync();
@@ -131,9 +134,11 @@ namespace FSP.Infrastructure.Repository
                 cmd.CommandType = CommandType.Text;
                 await conn.OpenAsync();
                 var reader = await cmd.ExecuteReaderAsync();
-
                 while (await reader.ReadAsync())
                 {
+                    var binaryData = (byte[])reader["Image"];
+                    var base64String = Convert.ToBase64String(binaryData);
+                    var base64Image = $"data:image/jpeg;base64,{base64String}";
                     results.Add(new CatalogDto
                     {
                         Specie = reader["Specie"].ToString(),
@@ -145,7 +150,7 @@ namespace FSP.Infrastructure.Repository
                         Distribution = reader["Distribution"].ToString(),
                         Feeding = reader["Feeding"].ToString(),
                         Category = reader["Category"].ToString(),
-                        Image = reader["Image"].ToString(),
+                        Image = base64Image,
                         Map = reader["Map"].ToString()
                     });
                 }
