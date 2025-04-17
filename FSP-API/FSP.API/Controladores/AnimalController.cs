@@ -235,26 +235,20 @@ namespace FSP_API.Controladores
 
         }
 
-        [HttpPost("RegistrosRechazado{id}")]
+        [HttpPatch("process-record/{recordId}")]
 
-        public async Task<ActionResult<Contadores>> RegistrosRE(int id)
+        public async Task<IActionResult>ProcessRecords([FromRoute] int recordId, [FromQuery] string status)
         {
+            var UserId = this.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-            try
+            if (UserId == null || status == null)
             {
-
-
-                var Registro = await _animalServicio.RegistrosRE(id);
-
-                return Ok(Registro);
-
+                return Unauthorized();
             }
-            catch (Exception ex)
-            {
 
-                _logger.LogError("ERROR: " + ex.ToString());
-                return StatusCode(500, "Ocurrio un error en el servidor, por favor intente más tarde");
-            }
+            var command = new ProcessRecordCommand(recordId, status);
+            var result = await _mediator.Send(command);
+            return Ok(result);
 
         }
 

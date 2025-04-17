@@ -11,5 +11,6 @@ namespace FSP.Infrastructure.Repository.Contracts
         Task<List<CatalogDto>> GetCatalog();
         Task<CatalogDto> GetCatalogByCommonNoun(string commonNoun);
         Task<List<AnimalRecordDto>> GetAllRecords(string recordStatus);
+        Task<MessageResponse> ProcessRecord(int recordId, string status);
     }
 }

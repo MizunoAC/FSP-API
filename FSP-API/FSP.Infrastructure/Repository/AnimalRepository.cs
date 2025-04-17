@@ -5,6 +5,7 @@ using FSP.Domain.Models.DTO;
 using FSP.Domain.Helpers;
 using System.Data;
 using FSP.Domain.Models.Wrapper;
+using FSP.Domain.Enums;
 
 namespace FSP.Infrastructure.Repository
 {
@@ -64,7 +65,7 @@ namespace FSP.Infrastructure.Repository
                 cmd.Parameters.AddWithValue("@UserId", userId);
                 cmd.Parameters.AddWithValue("@RecordStatus", recordStatus);
                 await conn.OpenAsync();
-                
+
                 var reader = await cmd.ExecuteReaderAsync();
 
                 while (await reader.ReadAsync())
@@ -217,6 +218,35 @@ namespace FSP.Infrastructure.Repository
                     result.Category = reader["Category"].ToString();
                     result.Image = reader["Image"].ToString();
                     result.Map = reader["Map"].ToString();
+                }
+            }
+            return result;
+        }
+        #endregion
+
+        #region admin
+        public async Task<MessageResponse> ProcessRecord(int recordId, string status)
+        {
+            var result = new MessageResponse();
+            using (var conn = new SqlConnection(_conn))
+
+                (Enum.TryParse<RecordStatus>(status, ignoreCase: true, out var result)
+
+            using (var cmd = new SqlCommand("[dbo].[SP_Process_Record]", conn))
+            {
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.Clear();
+                cmd.Parameters.AddWithValue("@RecordId", recordId);
+                cmd.Parameters.AddWithValue("@Status", status);
+
+                await conn.OpenAsync();
+                var reader = await cmd.ExecuteReaderAsync();
+
+                while (await reader.ReadAsync())
+                {
+                    result.Message = reader["Message"].ToString();
+                    bool.TryParse(reader["IsError"].ToString(), out bool isError);
+                    result.Error = isError;
                 }
             }
             return result;
