@@ -60,7 +60,8 @@ namespace FSP.Infrastructure.Repository
                 }
                 else
                 {
-                    return "An error occurred while authenticating.";
+                    return "Error";
+
                 }
             }
         }

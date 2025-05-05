@@ -7,7 +7,7 @@ namespace FSP.Application.Command
     public class ProcessRecordCommand : IRequest<MessageResponse>
     {
         public int RecordId { get; set; }
-        public ´string Status { get; set; }
+        public string Status { get; set; }
         public ProcessRecordCommand(int recordId, string status)
         {
             RecordId = recordId;
@@ -19,7 +19,7 @@ namespace FSP.Application.Command
     {
         private readonly IAnimalRepository _animalRepository;
 
-        public UpdateRecordStatusHandler(IAnimalRepository animalRepository )
+        public UpdateRecordStatusHandler(IAnimalRepository animalRepository)
         {
             _animalRepository = animalRepository;
         }

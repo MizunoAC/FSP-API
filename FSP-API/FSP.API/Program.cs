@@ -11,6 +11,8 @@ using FSP.Application.command;
 using FSP.Infrastructure.Repository;
 using System.Security.Cryptography;
 using FSP.Domain.Models.Wrapper;
+using Microsoft.AspNetCore.Diagnostics;
+using System.Net;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddCors(options =>
@@ -98,9 +100,35 @@ app.UseCors(x => x
     .AllowAnyOrigin());
 
 app.UseAuthentication();
-app.UseAuthorization(); 
+app.UseAuthorization();
 
+app.UseExceptionHandler(appError =>
+{
+    appError.Run(async context =>
+    {
+        var exception = context.Features.Get<IExceptionHandlerFeature>()?.Error;
+        context.Response.ContentType = "application/json";
 
+        if (exception is HttpRequestException httpEx && httpEx.StatusCode == HttpStatusCode.Unauthorized)
+        {
+            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            await context.Response.WriteAsJsonAsync(new
+            {
+                status = 401,
+                error = httpEx.Message
+            });
+        }
+        else
+        {
+            context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+            await context.Response.WriteAsJsonAsync(new
+            {
+                status = 500,
+                error = "Unexpected error"
+            });
+        }
+    });
+});
 app.MapControllers();
 
 app.Run();

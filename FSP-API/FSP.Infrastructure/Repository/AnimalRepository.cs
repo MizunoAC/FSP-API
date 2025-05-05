@@ -228,16 +228,15 @@ namespace FSP.Infrastructure.Repository
         public async Task<MessageResponse> ProcessRecord(int recordId, string status)
         {
             var result = new MessageResponse();
+            Enum.TryParse<RecordStatus>(status, ignoreCase: true, out var statusout);
+            int statusValue = (int)statusout;
             using (var conn = new SqlConnection(_conn))
-
-                (Enum.TryParse<RecordStatus>(status, ignoreCase: true, out var result)
-
             using (var cmd = new SqlCommand("[dbo].[SP_Process_Record]", conn))
             {
                 cmd.CommandType = CommandType.StoredProcedure;
                 cmd.Parameters.Clear();
                 cmd.Parameters.AddWithValue("@RecordId", recordId);
-                cmd.Parameters.AddWithValue("@Status", status);
+                cmd.Parameters.AddWithValue("@Status", statusout);
 
                 await conn.OpenAsync();
                 var reader = await cmd.ExecuteReaderAsync();

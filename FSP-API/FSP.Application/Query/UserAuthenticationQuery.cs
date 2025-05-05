@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using FSP.Domain.Models;
@@ -30,7 +31,13 @@ namespace FSP.Application.Query
         }
         public async Task<string> Handle(UserAuthenticationQuery request, CancellationToken cancellationToken)
         {
-            return await _Repository.Authentication(request.User);
+            var result = await _Repository.Authentication(request.User);
+
+            if (result == "Error") 
+            {
+                throw new HttpRequestException("Invalid credentials", null, HttpStatusCode.Unauthorized);
+            }
+            return result;
         }
     }
 }
