@@ -1,8 +1,5 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
-using FSP_API.Context;
-using FSP_API.Servicios;
-using FSP_API.Utilidades;
 using NLog.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Data.SqlClient;
@@ -11,96 +8,124 @@ using FSP.Application.command;
 using FSP.Infrastructure.Repository;
 using System.Security.Cryptography;
 using FSP.Domain.Models.Wrapper;
+using Microsoft.AspNetCore.Diagnostics;
+using System.Net;
 
-var builder = WebApplication.CreateBuilder(args);
-builder.Services.AddCors(options =>
+internal class Program
 {
-    options.AddPolicy("nuevapolitica", app =>
+    private static void Main(string[] args)
     {
-        app.WithOrigins("https://*.ngrok.io")
-        .AllowAnyOrigin()
-        .AllowAnyHeader()
-        .AllowAnyMethod();
-    });
-});
+        var builder = WebApplication.CreateBuilder(args);
+        builder.Services.AddCors(options =>
+        {
+            options.AddPolicy("nuevapolitica", app =>
+            {
+                app.WithOrigins("https://*.ngrok.io")
+                .AllowAnyOrigin()
+                .AllowAnyHeader()
+                .AllowAnyMethod();
+            });
+        });
 
-var config = new ConfigurationBuilder()
-    .AddJsonFile("appsettings.json")
-    .Build();
+        var config = new ConfigurationBuilder()
+            .AddJsonFile("appsettings.json")
+            .Build();
 
-var connectionString = builder.Configuration.GetConnectionString("WebConnection");
-var rsa = RSA.Create();
-var dir = config["Jwt:PublicKeyPath"];
-rsa.ImportFromPem(File.ReadAllText(dir));
+        var connectionString = builder.Configuration.GetConnectionString("WebConnection");
+        var rsa = RSA.Create();
+        var dir = config["Jwt:PublicKeyPath"];
+        rsa.ImportFromPem(File.ReadAllText(dir));
 
-var rsaSecurityKey = new RsaSecurityKey(rsa);
+        var rsaSecurityKey = new RsaSecurityKey(rsa);
 
-builder.Services.AddSingleton(new SqlConnection(connectionString));
+        builder.Services.AddSingleton(new SqlConnection(connectionString));
 
-builder.Services.AddSingleton(new DbConnectionConfig
-{
-    ConnectionString = connectionString
-});
-builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<AddUserCommandHandler>());
-builder.Services.AddAuthentication(options =>
-{
-    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
-}).AddJwtBearer(o =>
-{
-    o.TokenValidationParameters = new TokenValidationParameters
-    {
-        ValidIssuer = builder.Configuration["Jwt:Issuer"],
-        ValidAudience = builder.Configuration["Jwt:Audience"],
-        IssuerSigningKey =  rsaSecurityKey,
-        ValidateIssuer = true,
-        ValidateAudience = true,
-        ValidateLifetime = false,
-        ValidateIssuerSigningKey = true
-    };
-});
+        builder.Services.AddSingleton(new DbConnectionConfig
+        {
+            ConnectionString = connectionString
+        });
+        builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<AddUserCommandHandler>());
+        builder.Services.AddAuthentication(options =>
+        {
+            options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+            options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+        }).AddJwtBearer(o =>
+        {
+            o.TokenValidationParameters = new TokenValidationParameters
+            {
+                ValidIssuer = builder.Configuration["Jwt:Issuer"],
+                ValidAudience = builder.Configuration["Jwt:Audience"],
+                IssuerSigningKey = rsaSecurityKey,
+                ValidateIssuer = true,
+                ValidateAudience = true,
+                ValidateLifetime = false,
+                ValidateIssuerSigningKey = true
+            };
+        });
+        builder.Services.AddScoped<IUserRepository, UsersRepository>();
+        builder.Services.AddScoped<IAuthenticationRepository, AuthenticationRepository>();
+        builder.Services.AddScoped<IAnimalRepository, AnimalsRepository>();
 
-builder.Services.AddDbContext<ContexDb>();
-builder.Services.AddScoped<IUsuariosServicio, UsuariosServicio>();
-builder.Services.AddScoped<IAnimalServicio, AnimalServicio>();
-builder.Services.AddScoped<ILoginServicio, LoginServicio>();
-builder.Services.AddScoped<IRecuperarcontra, Recuperarcontra>();
-builder.Services.AddScoped<IUserRepository, UsersRepository>();
-builder.Services.AddScoped<IAuthenticationRepository, AuthenticationRepository>();
-builder.Services.AddScoped<IAnimalRepository, AnimalsRepository>();
+        builder.Host.ConfigureLogging((hostingContext, logging) =>
+        {
+            logging.AddNLog();
+        });
 
-builder.Host.ConfigureLogging((hostingContext, logging) =>
-{
-    logging.AddNLog();
-});
+        builder.Services.AddAutoMapper(typeof(Program));
+        builder.Services.AddControllers();
+        // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+        builder.Services.AddEndpointsApiExplorer();
+        builder.Services.AddSwaggerGen();
 
-builder.Services.AddAutoMapper(typeof(Program));
-builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+        var app = builder.Build();
 
-var app = builder.Build();
+        // Configure the HTTP request pipeline.
+        if (app.Environment.IsDevelopment())
+        {
+            app.UseSwagger();
+            app.UseSwaggerUI();
+        }
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
+        app.UseHttpsRedirection();
+
+        app.UseCors(x => x
+            .AllowAnyMethod()
+            .AllowAnyHeader()
+            .AllowAnyOrigin());
+
+        app.UseAuthentication();
+        app.UseAuthorization();
+
+        app.UseExceptionHandler(appError =>
+        {
+            appError.Run(async context =>
+            {
+                var exception = context.Features.Get<IExceptionHandlerFeature>()?.Error;
+                context.Response.ContentType = "application/json";
+
+                if (exception is HttpRequestException httpEx && httpEx.StatusCode == HttpStatusCode.Unauthorized)
+                {
+                    context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                    await context.Response.WriteAsJsonAsync(new
+                    {
+                        status = 401,
+                        error = httpEx.Message
+                    });
+                }
+                else
+                {
+                    context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+                    await context.Response.WriteAsJsonAsync(new
+                    {
+                        status = 500,
+                        error = "Unexpected error"
+                    });
+                }
+            });
+        });
+        app.MapControllers();
+
+        app.Run();
+    }
 }
-
-app.UseHttpsRedirection();
-
-app.UseCors(x => x
-    .AllowAnyMethod()
-    .AllowAnyHeader()
-    .AllowAnyOrigin());
-
-app.UseAuthentication();
-app.UseAuthorization(); 
-
-
-app.MapControllers();
-
-app.Run();

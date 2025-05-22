@@ -4,7 +4,7 @@ SELECT AR.[CommonNoun],
        AE.[State] AS [AnimalState], 
        AR.[Description],
        AL.[Location],
-       --AP.[Image],
+       AP.[Image],
        RS.[Description] AS [Status]
  FROM [dbo].[UserRecords] AR
  INNER JOIN [dbo].[UserRecordsLocation] AL ON AR.[RecordId] = AL.[RecordId]

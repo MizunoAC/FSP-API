@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Notificación - Fauna Silvestre</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #f0f4f8;
+      font-family: Arial, sans-serif;
+    }
+    .container {
+      max-width: 600px;
+      margin: 30px auto;
+      background-color: #ffffff;
+      padding: 20px 30px;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    h1 {
+      color: #2a5d34;
+      font-size: 24px;
+    }
+    p {
+      color: #333333;
+      line-height: 1.5;
+      font-size: 16px;
+    }
+    .button {
+      display: inline-block;
+      background-color: #4CAF50;
+      color: #ffffff;
+      padding: 12px 24px;
+      border-radius: 5px;
+      text-decoration: none;
+      font-weight: bold;
+      margin-top: 20px;
+    }
+    .footer {
+      text-align: center;
+      font-size: 12px;
+      color: #888888;
+      margin-top: 40px;
+    }
+    .social-icons {
+      margin-top: 20px;
+      text-align: center;
+    }
+    .social-icons a {
+      margin: 0 10px;
+      text-decoration: none;
+      display: inline-block;
+    }
+    .social-icons img {
+      width: 32px;
+      height: 32px;
+    }
+    .app-link {
+      display: block;
+      text-align: center;
+      margin-top: 30px;
+    }
+    .app-link img {
+      width: 150px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Fauna Silvestre</h1>
+
+    <p>Estimado/a @Model.UserName,</p>
+
+    <p>Su registro ha sido <strong>@Model.Status</strong>.</p>
+
+    <p>Inicie sesión en la aplicación para revisar sus registros y continuar con el seguimiento de la fauna silvestre.</p>
+
+    <a href="{{url_inicio_sesion}}" class="button">Iniciar sesión</a>
+
+    <div class="app-link">
+      <p>Descargue la aplicación:</p>
+      <a href="{{url_googleplay}}">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/7/78/Google_Play_Store_badge_EN.svg" alt="Disponible en Google Play">
+      </a>
+    </div>
+
+    <div class="social-icons">
+      <a href="{{facebook_url}}">
+        <img src="https://cdn-icons-png.flaticon.com/512/124/124010.png" alt="Facebook">
+      </a>
+      <a href="{{twitter_url}}">
+        <img src="https://cdn-icons-png.flaticon.com/512/733/733579.png" alt="Twitter">
+      </a>
+      <a href="{{instagram_url}}">
+        <img src="https://cdn-icons-png.flaticon.com/512/174/174855.png" alt="Instagram">
+      </a>
+    </div>
+
+    <div class="footer">
+      &copy; 2025 Fauna Silvestre. Todos los derechos reservados.
+    </div>
+  </div>
+</body>
+</html>

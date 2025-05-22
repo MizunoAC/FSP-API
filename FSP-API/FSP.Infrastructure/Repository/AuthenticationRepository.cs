@@ -24,45 +24,38 @@ namespace FSP.Infrastructure.Repository
 
         }
 
-        public async Task<string> Authentication(UserAuthentication user)
+        public async Task<MessageResponse> Authentication(UserAuthentication user)
         {
+            MessageResponse result = new MessageResponse();
             using (SqlConnection conn = new SqlConnection(_con))
-            using (var cmd = new SqlCommand("[dbo].[ValidateUserLogin]", conn))
+            using (var cmd = new SqlCommand("[dbo].[ValidateUserLogintest]", conn))
             {
                 cmd.CommandType = System.Data.CommandType.StoredProcedure;
                 cmd.Parameters.Clear();
                 cmd.Parameters.AddWithValue("@UserDomain", user.UserName);
                 cmd.Parameters.AddWithValue("@Password", user.Password);
-                var userId = new SqlParameter("@UserId", SqlDbType.Int)
-                {
-                    Direction = ParameterDirection.Output
-                };
-                cmd.Parameters.Add(userId);
-                var validate = new SqlParameter("@Validate", SqlDbType.Bit)
-                {
-                    Direction = ParameterDirection.Output
-                };
-                cmd.Parameters.Add(validate);
-                var userTypesp = new SqlParameter("@UserType", SqlDbType.Int)
-                {
-                    Direction = ParameterDirection.Output
-                };
-                cmd.Parameters.Add(userTypesp);
-
                 await conn.OpenAsync();
-                await cmd.ExecuteNonQueryAsync();
-                await conn.CloseAsync();
+                var reader = await cmd.ExecuteReaderAsync();
 
-                if ((bool)validate.Value)
+                while (reader.Read())
                 {
-                    UserType userType = (UserType)userTypesp.Value;
-                    return this.TokenGenerationRS(userId.Value.ToString(), userType);
+                    bool.TryParse(reader["Validate"].ToString(), out bool validate);
+
+                    if (validate)
+                    {
+                        int.TryParse(reader["UserId"].ToString(), out int userId);
+                        UserType userType = (UserType)reader["UserType"];
+                        result.Message = this.TokenGenerationRS(userId.ToString(), userType);
+                    }
+                    else
+                    {
+                        result.Message = reader["Message"].ToString();
+                    }
+                    result.Error = validate;
                 }
-                else
-                {
-                    return "An error occurred while authenticating.";
-                }
+                await conn.CloseAsync();
             }
+            return result;
         }
 
         public string TokenGenerationRS(string User, UserType userType)
