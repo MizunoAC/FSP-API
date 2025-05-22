@@ -6,15 +6,23 @@ using FSP.Domain.Helpers;
 using System.Data;
 using FSP.Domain.Models.Wrapper;
 using FSP.Domain.Enums;
+using RazorEngineCore;
+using System.Net.Mail;
+using System.Net;
+using Microsoft.Extensions.Configuration;
+using System.IO;
 
 namespace FSP.Infrastructure.Repository
 {
     public class AnimalsRepository : IAnimalRepository
     {
         private readonly string? _conn;
-        public AnimalsRepository(DbConnectionConfig config)
+        private readonly IConfiguration _config;
+
+        public AnimalsRepository(DbConnectionConfig con, IConfiguration config)
         {
-            _conn = config.ConnectionString;
+            _conn = con.ConnectionString;
+            _config = config;
         }
 
         #region UserAnimalRecord
@@ -22,6 +30,8 @@ namespace FSP.Infrastructure.Repository
         public async Task<MessageResponse> RegisterNewRecord(AnimalRecordRequest model, string userId)
         {
             var result = new MessageResponse();
+            string base64String = model.img;
+            byte[] imagenBytes = Convert.FromBase64String(base64String);
 
             using (SqlConnection conn = new SqlConnection(_conn))
 
@@ -33,7 +43,7 @@ namespace FSP.Infrastructure.Repository
                 cmd.Parameters.AddWithValue("@CommonNoun", model.CommonNoun);
                 cmd.Parameters.AddWithValue("@AnimalState", model.AnimalState);
                 cmd.Parameters.AddWithValue("@Description", model.Description);
-                cmd.Parameters.AddWithValue("@img", model.img);
+                cmd.Parameters.AddWithValue("@img", imagenBytes);
                 cmd.Parameters.AddWithValue("@Location", model.Location);
 
                 await conn.OpenAsync();
@@ -60,6 +70,8 @@ namespace FSP.Infrastructure.Repository
             using (SqlConnection conn = new SqlConnection(_conn))
             using (var cmd = new SqlCommand(sql, conn))
             {
+
+
                 cmd.CommandType = System.Data.CommandType.Text;
                 cmd.Parameters.Clear();
                 cmd.Parameters.AddWithValue("@UserId", userId);
@@ -70,12 +82,16 @@ namespace FSP.Infrastructure.Repository
 
                 while (await reader.ReadAsync())
                 {
+                    var binaryData = (byte[])reader["Image"];
+                    var base64String = Convert.ToBase64String(binaryData);
+                    var base64Image = $"data:image/jpeg;base64,{base64String}";
                     results.Add(new AnimalRecordDto
                     {
                         CommonNoun = reader["CommonNoun"].ToString(),
                         AnimalState = reader["AnimalState"].ToString(),
                         Description = reader["Description"].ToString(),
-                        Location = reader["Location"].ToString()
+                        Location = reader["Location"].ToString(),
+                        img = base64Image
                     });
                 }
                 await conn.CloseAsync();
@@ -249,6 +265,55 @@ namespace FSP.Infrastructure.Repository
                 }
             }
             return result;
+        }
+
+        public async Task<UserEmailData> GetEmailData(int recordId) 
+        {
+            var result = new UserEmailData();
+            var sql = ResourceHelper.GetResource("GetEmailData");
+            using (var con = new SqlConnection(_conn))
+            using (var cmd = new SqlCommand(sql, con))
+            {
+                cmd.CommandType = CommandType.Text;
+                cmd.Parameters.Clear();
+                cmd.Parameters.AddWithValue("@RecordId", recordId);
+
+                await con.OpenAsync();
+                var reader = await cmd.ExecuteReaderAsync();
+                while (await reader.ReadAsync())
+                {
+                    result.Email = reader["Email"].ToString();
+                    result.UserName = reader["FullName"].ToString();
+                }
+            }
+            return result;
+        }
+
+        public void SendEmailNotificacion(UserEmailData data, string rootenv)
+        {
+            var templatePath = Path.Combine(AppContext.BaseDirectory, "Templates", "Email_Notification.html");
+            string templateContent = System.IO.File.ReadAllText(templatePath);
+            IRazorEngine razorEngine = new RazorEngine();
+            IRazorEngineCompiledTemplate template = razorEngine.Compile(templateContent);
+            string emailBody = template.Run(data);
+
+            var subject = "Registro Aceptado";
+            MailMessage mailMessage = new MailMessage
+            {
+                From = new MailAddress(_config["MailSettings:Mail"], "Fauna Silvestre"),
+                Subject = subject,
+                IsBodyHtml = true,
+                Body = emailBody
+            };
+
+            mailMessage.To.Add(data.Email);
+
+            var smtp = new SmtpClient("smtp.zoho.com", 587)
+            {
+                Credentials = new NetworkCredential(_config["MailSettings:Mail"] , _config["MailSettings:Password"]),
+                EnableSsl = true
+            };
+            smtp.Send(mailMessage);
         }
         #endregion
     }

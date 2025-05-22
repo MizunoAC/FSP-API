@@ -9,6 +9,16 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Templates\Email_Notification.html" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Templates\Email_Notification.html">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </EmbeddedResource>
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="12.0.0" />
     <PackageReference Include="BCrypt.Net-Core" Version="1.6.0" />
     <PackageReference Include="FluentAssertions" Version="6.10.0" />
@@ -35,7 +45,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="imagenes\" />
+    <Folder Include="Images\" />
     <Folder Include="Log\" />
   </ItemGroup>
 

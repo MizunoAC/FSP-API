@@ -5,7 +5,7 @@ namespace FSP.Infrastructure.Repository.Contracts
 {
     public interface IAuthenticationRepository
     {
-        Task<string> Authentication(UserAuthentication user);
+        Task<MessageResponse> Authentication(UserAuthentication user);
         string TokenGenerationRS(string User, UserType userType);
     }
 }

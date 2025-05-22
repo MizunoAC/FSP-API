@@ -1,6 +1,4 @@
 using Microsoft.AspNetCore.Mvc;
-using FSP_API.Context;
-using FSP_API.Servicios;
 using FSP.Domain.Models;
 using MediatR;
 using FSP.Application.command;
@@ -15,14 +13,10 @@ namespace FSP_API.Controladores
     public class UsersController : ControllerBase
     {
         private readonly IMediator _mediator;
-        private readonly IUsuariosServicio _usuariosServicio;
-        private readonly ContexDb _contextDb;
         private readonly ILogger<UsersController> _logger;
 
-        public UsersController(IUsuariosServicio usuariosServicio, ContexDb contextDb, ILogger<UsersController> logger, IMediator mediator)
+        public UsersController(ILogger<UsersController> logger, IMediator mediator)
         {
-            _usuariosServicio = usuariosServicio;
-            _contextDb = contextDb;
             _logger = logger;
             _mediator = mediator;
         }

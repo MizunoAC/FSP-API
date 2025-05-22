@@ -33,12 +33,11 @@ namespace FSP.Application.Query
         {
             var result = await _Repository.Authentication(request.User);
 
-            if (result == "Error") 
+            if (!result.Error) 
             {
-                throw new HttpRequestException("Invalid credentials", null, HttpStatusCode.Unauthorized);
+                throw new HttpRequestException(result.Message, null, HttpStatusCode.Unauthorized);
             }
-            return result;
+            return result.Message;
         }
     }
 }
-

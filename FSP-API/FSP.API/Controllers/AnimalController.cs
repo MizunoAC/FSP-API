@@ -1,11 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
-using FSP_API.Context;
-using FSP_API.Modelos.ViewModel;
-using FSP_API.ModelosDTO;
-using FSP_API.Servicios;
-using FSP_API.Utilidades;
 using System.Security.Claims;
 using FSP.Domain.Models;
 using FSP.Application.command;
@@ -20,24 +15,18 @@ namespace FSP_API.Controladores
     [ApiController]
     public class AnimalController : ControllerBase
     {
-        private readonly IAnimalServicio _animalServicio;
-        private readonly IUsuariosServicio _usuariosServicio;
-        private readonly ContexDb _contexDb;
         private readonly IConfiguration _config;
-        private readonly IRecuperarcontra _recuperarcontra;
         private readonly ILogger<AnimalController> _logger;
         private readonly IMediator _mediator;
+        private readonly IHostEnvironment _env;
 
-        public AnimalController(IAnimalServicio animalServicio, IUsuariosServicio usuariosServicio, ContexDb contexDb, IConfiguration config, IRecuperarcontra recuperarcontra,
-            ILogger<AnimalController> logger, IMediator mediator)
+        public AnimalController(IConfiguration config,
+            ILogger<AnimalController> logger, IMediator mediator, IHostEnvironment env)
         {
-            _animalServicio = animalServicio;
-            _usuariosServicio = usuariosServicio;
-            _contexDb = contexDb;
             _config = config;
-            _recuperarcontra = recuperarcontra;
             _logger = logger;
             _mediator = mediator;
+            _env = env;
         }
 
         #region UserAnimalRecord
@@ -52,7 +41,7 @@ namespace FSP_API.Controladores
         /// <response code="401">Unauthorized.</response>
         [Authorize]
         [HttpPost("NewRecord")]
-        public async Task<IActionResult> NewRecord( [FromBody] AnimalRecordRequest record)
+        public async Task<IActionResult> NewRecord([FromBody] AnimalRecordRequest record)
         {
             var UserId = this.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
@@ -192,138 +181,21 @@ namespace FSP_API.Controladores
             return Ok(result);
         }
 
-        [HttpPost("Enviarcorreo")]
-
-        public async Task<ActionResult<Contadores>> EnviarCorreo(ModeloCorreoRechazado modeloCorreo)
-        {
-
-            try
-            {
-                var usuario = _contexDb.ModeloUsuarios.Where(A => A.ModeloUsuarioId == modeloCorreo.modeloUsuarioId).FirstOrDefault();
-
-                if (usuario == null)
-                {
-                    _logger.LogError("ERROR:Correo no registrado");
-                    NotFound("Usuario no encontrado");
-                }
-
-
-                string mensaje = "Hola este es un correo autogenerado, por favor de no responder " + "<br><br>" +
-                  "Lamento informarle que su registro fue rechazado debido a los siguientes criterios:" +
-                  "<br></br>" + modeloCorreo.Motivo + "<br></br>" +
-                  "Que tenga un buen día y disculpe las molestias";
-
-
-
-                await _recuperarcontra.enviarCorreo(new EmailMensaje
-                {
-                    Email = usuario.Email,
-                    Asunto = "Su registro fue rechazado",
-                    Mensaje = mensaje
-
-                });
-
-
-                return Ok();
-
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError("ERROR: " + ex.ToString());
-                return StatusCode(500, "Ocurrio un error en el servidor, por favor intente de nuevo más tarde");
-            }
-
-        }
-
         [HttpPatch("process-record/{recordId}")]
 
-        public async Task<IActionResult>ProcessRecords([FromRoute] int recordId, [FromQuery] string status)
+        public async Task<IActionResult> ProcessRecords([FromRoute] int recordId, [FromQuery] string status)
         {
             var UserId = this.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            string root = _env.ContentRootPath;
 
             if (UserId == null || status == null)
             {
                 return Unauthorized();
             }
 
-            var command = new ProcessRecordCommand(recordId, status);
+            var command = new ProcessRecordCommand(recordId, status, root);
             var result = await _mediator.Send(command);
             return Ok(result);
-
-        }
-
-        [HttpGet("RegistrosEnespera")]
-
-        public async Task<ActionResult<Contadores>> EnEspera()
-        {
-
-            try
-            {
-                var imagenes = new ImagenesDTO();
-                _config.GetSection(ImagenesDTO.ImagenesSettings).Bind(imagenes);
-                var animales = await _animalServicio.BuscarAnimalesTemporal();
-
-                if (animales != null)
-                {
-
-                    foreach (var Animal in animales)
-                    {
-
-                        string nombreImg = $"{imagenes.Path}{Animal.ImagenAnimal}{imagenes.extension}";
-
-                        byte[] fileByte = System.IO.File.ReadAllBytes(nombreImg);
-                        Animal.ImgBase64 = Convert.ToBase64String(fileByte);
-
-                    }
-                    return Ok(animales);
-                }
-
-                return NotFound("Sin registros");
-            }
-            catch (Exception ex)
-            {
-
-                _logger.LogWarning("Error: " + ex.ToString());
-                return NotFound("Sin registros");
-
-            }
-
-        }
-
-        [HttpGet("RegistrosAceptados")]
-
-        public async Task<ActionResult<Contadores>> Aceptados()
-        {
-
-            try
-            {
-                var imagenes = new ImagenesDTO();
-                _config.GetSection(ImagenesDTO.ImagenesSettings).Bind(imagenes);
-                var animales = await _animalServicio.BuscarAnimalesAceptados();
-
-                if (animales != null)
-                {
-
-                    foreach (var Animal in animales)
-                    {
-
-                        string nombreImg = $"{imagenes.Path}{Animal.ImagenAnimal}{imagenes.extension}";
-
-                        byte[] fileByte = System.IO.File.ReadAllBytes(nombreImg);
-                        Animal.ImgBase64 = Convert.ToBase64String(fileByte);
-
-                    }
-                    return Ok(animales);
-                }
-
-                return NotFound("Sin registros");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError("ERROR: " + ex.ToString());
-                return StatusCode(500);
-
-            }
 
         }
     }
