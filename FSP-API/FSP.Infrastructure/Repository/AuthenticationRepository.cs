@@ -1,7 +1,6 @@
 ﻿using Microsoft.Data.SqlClient;
 using FSP.Domain.Models;
 using FSP.Infrastructure.Repository.Contracts;
-using System.Data;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -9,6 +8,9 @@ using System.Security.Cryptography;
 using Microsoft.Extensions.Configuration;
 using FSP.Domain.Models.Wrapper;
 using FSP.Domain.Enums;
+using RazorEngineCore;
+using System.Net.Mail;
+using System.Net;
 
 namespace FSP.Infrastructure.Repository
 {
@@ -82,6 +84,59 @@ namespace FSP.Infrastructure.Repository
                 signingCredentials: credentials);
 
             return new JwtSecurityTokenHandler().WriteToken(token);
+        }
+
+        public async Task<int> GenerateResetCode(string email)
+        {
+            DotNetEnv.Env.Load();
+            string Key = Environment.GetEnvironmentVariable("sqlkey");
+            var result = new UserEmailData();
+
+            using (SqlConnection conn = new SqlConnection(_con))
+            using (var cmd = new SqlCommand("[dbo].[GenerateChagePasswordCode]", conn))
+            {
+                cmd.CommandType = System.Data.CommandType.StoredProcedure;
+                cmd.Parameters.Clear();
+                cmd.Parameters.AddWithValue("@Key", Key);
+                cmd.Parameters.AddWithValue("@Email", email);
+                await conn.OpenAsync();
+                var reader = await cmd.ExecuteReaderAsync();
+
+                while (reader.Read())
+                {
+                    result.Status = reader["Code"].ToString();
+                    result.UserName = reader["UserName"].ToString();
+                }
+                await conn.CloseAsync();
+            }
+            if (result != null && !result.Status.Contains("The Email"))
+            {
+                var templatePath = Path.Combine(AppContext.BaseDirectory, "Templates", "Email_Notification_Reset_Password.html");
+                string templateContent = System.IO.File.ReadAllText(templatePath);
+                IRazorEngine razorEngine = new RazorEngine();
+                IRazorEngineCompiledTemplate template = razorEngine.Compile(templateContent);
+                string emailBody = template.Run(result);
+
+                var subject = "Restablecer Contraseña";
+                MailMessage mailMessage = new MailMessage
+                {
+                    From = new MailAddress(_config["MailSettings:Mail"], "Fauna Silvestre"),
+                    Subject = subject,
+                    IsBodyHtml = true,
+                    Body = emailBody
+                };
+
+                mailMessage.To.Add(email);
+
+                var smtp = new SmtpClient("smtp.zoho.com", 587)
+                {
+                    Credentials = new NetworkCredential(_config["MailSettings:Mail"], _config["MailSettings:Password"]),
+                    EnableSsl = true
+                };
+                smtp.Send(mailMessage);
+            }
+
+            return 25;
         }
     }
 }
