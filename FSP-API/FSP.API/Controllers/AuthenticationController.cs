@@ -37,5 +37,23 @@ namespace FSP_API.Controladores
                 var result = await _mediator.Send(command);
                 return Ok(result);
         }
-    }
+
+        /// <summary>
+        /// Method to perform user authentication.
+        /// </summary>
+        /// <param name="User">The user's authentication data.</param>
+        /// <returns>Returns a token with the user's authorization.</returns>
+        /// <response code="200">Token.</response>
+        /// <response code="400">Invalid data.</response>
+        /// <response code="401">Unauthorized.</response>
+        [HttpGet("Code")]
+
+        public async Task<IActionResult> GetCode( [FromQuery] string email)
+        {
+            var query = new GetResetCodeQuery(email);
+            var result = await _mediator.Send(query);
+            return Ok(result);
+        }
+    
+}
 }

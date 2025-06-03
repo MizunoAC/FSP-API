@@ -7,5 +7,6 @@ namespace FSP.Infrastructure.Repository.Contracts
     {
         Task<MessageResponse> Authentication(UserAuthentication user);
         string TokenGenerationRS(string User, UserType userType);
+        Task<int> GenerateResetCode(string email);
     }
 }

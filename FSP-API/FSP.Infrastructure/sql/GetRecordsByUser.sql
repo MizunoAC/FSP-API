@@ -1,6 +1,7 @@
 --DECLARE @UserId INT = 2
 
-SELECT AR.[CommonNoun], 
+SELECT AR.[RecordId],
+       AR.[CommonNoun], 
        AE.[State] AS [AnimalState], 
        AR.[Description],
        AL.[Location],
