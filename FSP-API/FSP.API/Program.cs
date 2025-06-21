@@ -67,10 +67,7 @@ internal class Program
         builder.Services.AddScoped<IAuthenticationRepository, AuthenticationRepository>();
         builder.Services.AddScoped<IAnimalRepository, AnimalsRepository>();
 
-        builder.Host.ConfigureLogging((hostingContext, logging) =>
-        {
-            logging.AddNLog();
-        });
+        builder.Logging.AddNLog();
 
         builder.Services.AddAutoMapper(typeof(Program));
         builder.Services.AddControllers();

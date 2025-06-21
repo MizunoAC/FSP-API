@@ -11,6 +11,10 @@ using FSP.Domain.Enums;
 using RazorEngineCore;
 using System.Net.Mail;
 using System.Net;
+using FSP.Domain.Models.DTO;
+using Azure;
+using System.Data;
+using FSP.Domain.Helpers;
 
 namespace FSP.Infrastructure.Repository
 {
@@ -26,9 +30,9 @@ namespace FSP.Infrastructure.Repository
 
         }
 
-        public async Task<MessageResponse> Authentication(UserAuthentication user)
+        public async Task<TokenResult> Authentication(UserAuthentication user)
         {
-            MessageResponse result = new MessageResponse();
+            TokenResult result = new TokenResult();
             using (SqlConnection conn = new SqlConnection(_con))
             using (var cmd = new SqlCommand("[dbo].[ValidateUserLogintest]", conn))
             {
@@ -47,20 +51,23 @@ namespace FSP.Infrastructure.Repository
                     {
                         int.TryParse(reader["UserId"].ToString(), out int userId);
                         UserType userType = (UserType)reader["UserType"];
-                        result.Message = this.TokenGenerationRS(userId.ToString(), userType);
+                        var tokens = this.TokenGenerationRS(userId.ToString(), userType);
+                        result.AccessToken = tokens.AccessToken;
+                        result.RefreshToken = tokens.RefreshToken;
                     }
                     else
                     {
                         result.Message = reader["Message"].ToString();
                     }
                     result.Error = validate;
+                   
                 }
                 await conn.CloseAsync();
             }
             return result;
         }
 
-        public string TokenGenerationRS(string User, UserType userType)
+        public TokenResult TokenGenerationRS(string User, UserType userType)
         {
             var rsa = RSA.Create();
             string path = _config["Jwt:PrivateKeyPath"];
@@ -83,10 +90,72 @@ namespace FSP.Infrastructure.Repository
                 expires: DateTime.Now.AddMinutes(10),
                 signingCredentials: credentials);
 
+            var accessToken = new JwtSecurityTokenHandler().WriteToken(token);
+
+            var refreshToken = new JwtSecurityToken(
+                _config["Jwt:Issuer"],
+                _config["Jwt:Audience"],
+                claims: new[]
+                {
+                new Claim(JwtRegisteredClaimNames.Sub, User),
+                new Claim("typ", "refresh"),
+                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+                },
+                expires: DateTime.UtcNow.AddDays(7),
+                signingCredentials: credentials
+            );
+            var refreshTokenString = new JwtSecurityTokenHandler().WriteToken(refreshToken);
+
+            return new TokenResult
+            {
+                RefreshToken = refreshTokenString,
+                AccessToken = accessToken
+            };
+        }
+        public async void SaveRefreshToken(string userId, string token, DateTime expiresAt)
+        {
+            var sql = ResourceHelper.GetResource("");
+            using (var cnn = new SqlConnection(_con))
+            using (var cmd = new SqlCommand("[dbo].[RefreshTokens]", cnn))
+            {
+                cmd.CommandType = System.Data.CommandType.StoredProcedure;
+                cmd.Parameters.Clear();
+                cmd.Parameters.AddWithValue("@UserId", userId);
+                cmd.Parameters.AddWithValue("@Token", token);
+                cmd.Parameters.AddWithValue("@ExpiresAt", expiresAt);
+                await cnn.OpenAsync();
+                await cmd.ExecuteNonQueryAsync();
+                await cnn.CloseAsync();
+            }
+        }
+
+        public string TokenGenerationRSPasswordReset(string User)
+        {
+            var rsa = RSA.Create();
+            string path = _config["Jwt:PrivateKeyPath"];
+            string privateKey = File.ReadAllText(path);
+            rsa.ImportFromPem(privateKey);
+
+            var credentials = new SigningCredentials(new RsaSecurityKey(rsa), SecurityAlgorithms.RsaSha256);
+
+            var claims = new[]
+           {
+                new Claim(ClaimTypes.NameIdentifier, User),
+                new Claim("purpose", "password_reset")
+           };
+
+            var token = new JwtSecurityToken
+            (
+                _config["Jwt:Issuer"],
+                _config["Jwt:Audience"],
+                claims,
+                expires: DateTime.Now.AddMinutes(10),
+                signingCredentials: credentials);
+
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
 
-        public async Task<int> GenerateResetCode(string email)
+        public async Task<string> GenerateResetCode(string email)
         {
             DotNetEnv.Env.Load();
             string Key = Environment.GetEnvironmentVariable("sqlkey");
@@ -134,9 +203,80 @@ namespace FSP.Infrastructure.Repository
                     EnableSsl = true
                 };
                 smtp.Send(mailMessage);
+                return "code sent successfully";
             }
+            return result.Status;
+        }
 
-            return 25;
+        public async Task<string> ResetPassword(ResetPasswordDTO reset)
+        {
+            MessageResponse result = new MessageResponse();
+            var response = "";
+            using (SqlConnection conn = new SqlConnection(_con))
+            using (var cmd = new SqlCommand("[dbo].[UpdatePasswordV2]", conn))
+            {
+                cmd.CommandType = System.Data.CommandType.StoredProcedure;
+                cmd.Parameters.Clear();
+                cmd.Parameters.AddWithValue("@Email", reset.Email);
+                cmd.Parameters.AddWithValue("@Password", reset.Password);
+
+                SqlParameter message = new SqlParameter("@Message", SqlDbType.VarChar)
+                {
+                    Direction = ParameterDirection.Output,
+                    Size = -1
+                };
+                cmd.Parameters.Add(message);
+                await conn.OpenAsync();
+                await cmd.ExecuteNonQueryAsync();
+                response = message.Value?.ToString();
+                await conn.CloseAsync();
+            }
+            return response;
+        }
+        public async Task<MessageResponse> VerifyCode(string email, int code)
+        {
+            MessageResponse result = new MessageResponse();
+            SqlParameter userId = new SqlParameter();
+            var response = "";
+            DotNetEnv.Env.Load();
+            string Key = Environment.GetEnvironmentVariable("sqlkey");
+            using (SqlConnection conn = new SqlConnection(_con))
+            using (var cmd = new SqlCommand("[dbo].[VerifyCode]", conn))
+            {
+                cmd.CommandType = System.Data.CommandType.StoredProcedure;
+                cmd.Parameters.Clear();
+                cmd.Parameters.AddWithValue("@Code", code);
+                cmd.Parameters.AddWithValue("@Key", Key);
+                cmd.Parameters.AddWithValue("@Email", email);
+
+                SqlParameter message = new SqlParameter("@Message", SqlDbType.VarChar)
+                {
+                    Direction = ParameterDirection.Output,
+                    Size = -1
+                };
+                cmd.Parameters.Add(message);
+                SqlParameter isError = new SqlParameter("@IsError", SqlDbType.Bit)
+                {
+                    Direction = ParameterDirection.Output
+                };
+                cmd.Parameters.Add(isError);
+                userId = new SqlParameter("@UserId", SqlDbType.Int)
+                {
+                    Direction = ParameterDirection.Output
+                };
+                cmd.Parameters.Add(userId);
+                await conn.OpenAsync();
+                await cmd.ExecuteNonQueryAsync();
+                result.Error = isError.Value != DBNull.Value && (bool)isError.Value;
+                result.Message = message.Value?.ToString();
+                await conn.CloseAsync();
+            }
+            if (userId != null && result.Error == false)
+            {
+                result.Message = this.TokenGenerationRSPasswordReset(userId.Value.ToString());
+            }
+            return result;
         }
     }
+
 }

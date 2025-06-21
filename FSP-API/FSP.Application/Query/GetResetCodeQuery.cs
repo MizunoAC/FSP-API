@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace FSP.Application.Query
 {
-    public class GetResetCodeQuery:IRequest<int>
+    public class GetResetCodeQuery:IRequest<string>
     {
         public string Email { get; set; }
 
@@ -13,14 +13,14 @@ namespace FSP.Application.Query
             Email = email;
         }
 
-        public class GetResetCodeQueryHandler : IRequestHandler<GetResetCodeQuery, int>
+        public class GetResetCodeQueryHandler : IRequestHandler<GetResetCodeQuery, string>
         {
             private readonly IAuthenticationRepository _Repository;
             public GetResetCodeQueryHandler(IAuthenticationRepository Repository)
             {
                 _Repository = Repository;
             }
-            public async Task<int> Handle(GetResetCodeQuery request, CancellationToken cancellationToken)
+            public async Task<string> Handle(GetResetCodeQuery request, CancellationToken cancellationToken)
             {
              return await  _Repository.GenerateResetCode(request.Email);
             }
