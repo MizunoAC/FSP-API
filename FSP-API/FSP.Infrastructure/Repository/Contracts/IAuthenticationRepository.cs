@@ -11,5 +11,6 @@ namespace FSP.Infrastructure.Repository.Contracts
         Task<string> GenerateResetCode(string email);
         Task<string> ResetPassword(ResetPasswordDTO reset);
         Task<MessageResponse> VerifyCode(string email, int code);
+        TokenResult RefreshToken(string refreshToken);
     }
 }

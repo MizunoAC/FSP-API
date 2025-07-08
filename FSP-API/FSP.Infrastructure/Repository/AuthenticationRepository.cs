@@ -15,6 +15,7 @@ using FSP.Domain.Models.DTO;
 using Azure;
 using System.Data;
 using FSP.Domain.Helpers;
+using Azure.Core;
 
 namespace FSP.Infrastructure.Repository
 {
@@ -60,7 +61,7 @@ namespace FSP.Infrastructure.Repository
                         result.Message = reader["Message"].ToString();
                     }
                     result.Error = validate;
-                   
+
                 }
                 await conn.CloseAsync();
             }
@@ -101,10 +102,14 @@ namespace FSP.Infrastructure.Repository
                 new Claim("typ", "refresh"),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
                 },
-                expires: DateTime.UtcNow.AddDays(7),
+                expires: DateTime.Now.AddDays(7),
                 signingCredentials: credentials
             );
             var refreshTokenString = new JwtSecurityTokenHandler().WriteToken(refreshToken);
+            if (refreshTokenString != null)
+            {
+                SaveRefreshToken(User, refreshTokenString, DateTime.Now.AddDays(7));
+            }
 
             return new TokenResult
             {
@@ -112,11 +117,12 @@ namespace FSP.Infrastructure.Repository
                 AccessToken = accessToken
             };
         }
+
         public async void SaveRefreshToken(string userId, string token, DateTime expiresAt)
         {
             var sql = ResourceHelper.GetResource("");
             using (var cnn = new SqlConnection(_con))
-            using (var cmd = new SqlCommand("[dbo].[RefreshTokens]", cnn))
+            using (var cmd = new SqlCommand("[dbo].[InsertRefreshToken]", cnn))
             {
                 cmd.CommandType = System.Data.CommandType.StoredProcedure;
                 cmd.Parameters.Clear();
@@ -277,6 +283,77 @@ namespace FSP.Infrastructure.Repository
             }
             return result;
         }
-    }
 
+        public TokenResult RefreshToken(string refreshToken)
+        {
+
+            var rsa = RSA.Create();
+            string publicKey = File.ReadAllText(_config["Jwt:PublicKeyPath"]);
+            rsa.ImportFromPem(publicKey);
+
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var validationParams = new TokenValidationParameters
+            {
+                ValidateIssuer = true,
+                ValidateAudience = true,
+                ValidIssuer = _config["Jwt:Issuer"],
+                ValidAudience = _config["Jwt:Audience"],
+                ValidateLifetime = true,
+                ClockSkew = TimeSpan.Zero,
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey = new RsaSecurityKey(rsa)
+            };
+
+            try
+            {
+                var principal = tokenHandler.ValidateToken(refreshToken, validationParams, out _);
+
+                var typeClaim = principal.Claims.FirstOrDefault(c => c.Type == "typ");
+                if (typeClaim?.Value != "refresh")
+                    throw new SecurityTokenException("Token no es de tipo refresh");
+
+                var userId = principal.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(userId))
+                    throw new SecurityTokenException("Token inválido: sin usuario");
+
+                var isValid = IsValidRefreshToken(refreshToken, userId);
+                if (isValid)
+                {
+                    UserType userType = (UserType)2;
+                    return TokenGenerationRS(userId, userType);
+
+                }
+
+                return new TokenResult();
+                //    throw new SecurityTokenException("Refresh token inválido o revocado");
+
+                //var userType = await _refreshTokenRepo.GetUserTypeAsync(userId);
+                //return TokenGenerationRS(userId, userType);
+            }
+            catch (Exception ex)
+            {
+                throw new SecurityTokenException("Error al validar refresh token", ex);
+            }
+
+        }
+
+        public bool IsValidRefreshToken(string refreshtoken, string userId)
+        {
+            var sql = ResourceHelper.GetResource("IsValidRefreshToken");
+            using (SqlConnection conn = new SqlConnection(_con))
+            using (var cmd = new SqlCommand(sql, conn))
+            {
+                cmd.CommandType = System.Data.CommandType.Text;
+                cmd.Parameters.Clear();
+                cmd.Parameters.AddWithValue("@Token", refreshtoken);
+                cmd.Parameters.AddWithValue("@UserID", userId);
+
+                conn.Open();
+                var result = Convert.ToBoolean(cmd.ExecuteScalar());
+                conn.Close();
+                return result;
+            }
+
+        }
+    }
 }

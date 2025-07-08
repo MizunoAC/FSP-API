@@ -101,5 +101,13 @@ namespace FSP_API.Controladores
             var result = await _mediator.Send(query);
             return Ok(result);
         }
+
+        [HttpPost("refresh-token")]
+        public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenDto refreshToken)
+        {
+            var query = new RefreshTokenCommand(refreshToken);
+            var result = await _mediator.Send(query);
+            return Ok(result);
+        }
     }
 }
