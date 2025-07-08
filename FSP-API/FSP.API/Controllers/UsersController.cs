@@ -79,11 +79,31 @@ namespace FSP_API.Controladores
             var query = new GetUserByIDQuery(UserId);
             var User = await _mediator.Send(query);
 
-                if (User == null)
-                {
-                    return BadRequest("User Doesn't Exist");
-                }
-                return Ok(User);
+            if (User == null)
+            {
+                return BadRequest("User Doesn't Exist");
+            }
+            return Ok(User);
+        }
+
+        [Authorize]
+        [HttpGet("all-users")]
+        public async Task<ActionResult> AllUsers()
+        {
+            var UserId = this.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+            var query = new GetUserByIDQuery(UserId);
+            var User = await _mediator.Send(query);
+
+            if (User == null)
+            {
+                return BadRequest("User Doesn't Exist");
+            }
+            return Ok(User);
         }
 
         /// <summary>
