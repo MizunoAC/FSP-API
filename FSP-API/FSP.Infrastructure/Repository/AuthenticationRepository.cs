@@ -323,16 +323,23 @@ namespace FSP.Infrastructure.Repository
                     return TokenGenerationRS(userId, userType);
 
                 }
+                else
+                {
+                    return new TokenResult
+                    {
+                        Error = true,
+                        Message = "no autprozad"
+                    };
 
-                return new TokenResult();
-                //    throw new SecurityTokenException("Refresh token inválido o revocado");
-
-                //var userType = await _refreshTokenRepo.GetUserTypeAsync(userId);
-                //return TokenGenerationRS(userId, userType);
+                }
             }
             catch (Exception ex)
             {
-                throw new SecurityTokenException("Error al validar refresh token", ex);
+                return new TokenResult
+                {
+                    Error = true,
+                    Message = "no autprozad"
+                };
             }
 
         }

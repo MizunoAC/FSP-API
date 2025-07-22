@@ -6,6 +6,13 @@ namespace FSP.Application.Query
 {
     public class GetCatalogQuery :IRequest<List<CatalogDto>>
     {
+        public int PageSize { get; set; }
+        public int PageNumber { get; set; }
+        public GetCatalogQuery(int pageNumber, int pageSize)
+        {
+            PageSize = pageSize;
+            PageNumber = pageNumber;
+        }
 
     }
 
@@ -20,7 +27,7 @@ namespace FSP.Application.Query
 
         public async Task<List<CatalogDto>> Handle(GetCatalogQuery request, CancellationToken cancellationToken)
         {
-           return await _animalRepository.GetCatalog();
+           return await _animalRepository.GetCatalog(request.PageNumber, request.PageSize);
         }
     }
 }
