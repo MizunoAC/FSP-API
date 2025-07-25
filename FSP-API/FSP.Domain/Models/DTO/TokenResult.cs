@@ -5,6 +5,6 @@
         public string RefreshToken { get; set; }
         public string AccessToken { get; set; }
         public string Message { get; set; }
-        public bool Error { get; set; }
+        public bool Error { get; set; } = false;
     }
 }

@@ -62,7 +62,7 @@ namespace FSP.Infrastructure.Repository
             return result;
         }
 
-        public async Task<List<AnimalRecordDto>> GetRecordsByUserId(string userId, string recordStatus)
+        public async Task<List<AnimalRecordDto>> GetRecordsByUserId(string userId, string recordStatus, int pageNumber, int pageSize)
         {
             var results = new List<AnimalRecordDto>();
             var sql = ResourceHelper.GetResource("GetRecordsByUser");
@@ -74,6 +74,8 @@ namespace FSP.Infrastructure.Repository
                 cmd.Parameters.Clear();
                 cmd.Parameters.AddWithValue("@UserId", userId);
                 cmd.Parameters.AddWithValue("@RecordStatus", recordStatus);
+                cmd.Parameters.AddWithValue("@PageNumber", SqlDbType.Int).Value = pageNumber;
+                cmd.Parameters.AddWithValue("@PageSize", SqlDbType.Int).Value = pageSize;
                 await conn.OpenAsync();
 
                 var reader = await cmd.ExecuteReaderAsync();
@@ -104,7 +106,7 @@ namespace FSP.Infrastructure.Repository
             return results;
         }
 
-        public async Task<List<AnimalRecordDto>> GetAllRecords(string recordStatus)
+        public async Task<List<AnimalRecordDto>> GetAllRecords(string recordStatus, int pageNumber , int pageSize )
         {
             var results = new List<AnimalRecordDto>();
             var sql = ResourceHelper.GetResource("GetAllRecords");
@@ -115,6 +117,8 @@ namespace FSP.Infrastructure.Repository
                 cmd.CommandType = System.Data.CommandType.Text;
                 cmd.Parameters.Clear();
                 cmd.Parameters.AddWithValue("@RecordStatus", recordStatus);
+                cmd.Parameters.AddWithValue("@PageNumber", SqlDbType.Int).Value = pageNumber;
+                cmd.Parameters.AddWithValue("@PageSize", SqlDbType.Int).Value = pageSize;
                 await conn.OpenAsync(); 
                 var reader = await cmd.ExecuteReaderAsync();
 
@@ -186,7 +190,7 @@ namespace FSP.Infrastructure.Repository
             return result;
         }
 
-        public async Task<List<CatalogDto>> GetCatalog()
+        public async Task<List<CatalogDto>> GetCatalog(int pageNumber, int pageSize)
         {
             var results = new List<CatalogDto>();
             var sql = ResourceHelper.GetResource("GetCatalog");
@@ -195,6 +199,8 @@ namespace FSP.Infrastructure.Repository
             {
                 cmd.CommandType = CommandType.Text;
                 await conn.OpenAsync();
+                cmd.Parameters.AddWithValue("@PageNumber", SqlDbType.Int).Value = pageNumber;
+                cmd.Parameters.AddWithValue("@PageSize", SqlDbType.Int).Value = pageSize;
                 var reader = await cmd.ExecuteReaderAsync();
                 while (await reader.ReadAsync())
                 {

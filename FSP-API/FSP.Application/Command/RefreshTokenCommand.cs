@@ -1,6 +1,7 @@
 ﻿using FSP.Domain.Models.DTO;
 using FSP.Infrastructure.Repository.Contracts;
 using MediatR;
+using System.Net;
 
 namespace FSP.Application.Command
 {
@@ -18,7 +19,13 @@ namespace FSP.Application.Command
     {
         public async Task<TokenResult> Handle(RefreshTokenCommand request, CancellationToken cancellationToken)
         {
-          return  authenticationRepository.RefreshToken(request.RefreshToken);
+          var result =  authenticationRepository.RefreshToken(request.RefreshToken);
+
+            if (result.Error)
+            {
+                throw new HttpRequestException(result.Message, null, HttpStatusCode.Unauthorized);
+            }
+            return result;
         }
     }
 

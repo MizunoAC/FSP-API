@@ -65,7 +65,7 @@ namespace FSP_API.Controladores
         /// <response code="401">Unauthorized.</response>
         [Authorize]
         [HttpGet("AnimalRecordByUser/{recordStatus}")]
-        public async Task<IActionResult> GetRecordsByUser([FromRoute] string recordStatus)
+        public async Task<IActionResult> GetRecordsByUser([FromRoute] string recordStatus, [FromQuery] int page, [FromQuery] int size)
         {
             var UserId = this.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
@@ -74,7 +74,7 @@ namespace FSP_API.Controladores
                 return Unauthorized();
             }
 
-            var query = new GetAnimalRecordByUserQuery(UserId, recordStatus);
+            var query = new GetAnimalRecordByUserQuery(UserId, recordStatus, page, size);
             var result = await _mediator.Send(query);
             return Ok(result);
         }
@@ -116,7 +116,7 @@ namespace FSP_API.Controladores
         /// <response code="401">Unauthorized.</response>
         [Authorize]
         [HttpGet("Catalog")]
-        public async Task<IActionResult> GetCatalog()
+        public async Task<IActionResult> GetCatalog([FromQuery] int page, [FromQuery] int size)
         {
             var UserId = this.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (UserId == null)
@@ -124,7 +124,7 @@ namespace FSP_API.Controladores
                 return Unauthorized();
             }
 
-            var query = new GetCatalogQuery();
+            var query = new GetCatalogQuery(page, size);
             var result = await _mediator.Send(query);
             return Ok(result);
         }
@@ -167,7 +167,7 @@ namespace FSP_API.Controladores
         [Authorize(Roles = "Admin")]
         [HttpGet("all-records/{recordStatus}")]
 
-        public async Task<IActionResult> GetAllRecords([FromRoute] string recordStatus)
+        public async Task<IActionResult> GetAllRecords([FromRoute] string recordStatus, [FromQuery] int page, [FromQuery] int size)
         {
             var UserId = this.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
@@ -176,7 +176,7 @@ namespace FSP_API.Controladores
                 return Unauthorized();
             }
 
-            var query = new GetAllAnimalRecordQuery(recordStatus);
+            var query = new GetAllAnimalRecordQuery(recordStatus, page, size);
             var result = await _mediator.Send(query);
             return Ok(result);
         }

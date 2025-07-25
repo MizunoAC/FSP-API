@@ -7,9 +7,14 @@ namespace FSP.Application.Query
     public class GetAllAnimalRecordQuery : IRequest<List<AnimalRecordDto>>
     {
         public string RecordStatus { get; set; }
-        public GetAllAnimalRecordQuery(string recordStatus)
+        public int PageNumber { get; set; } 
+        public int PageSize { get; set; }
+
+        public GetAllAnimalRecordQuery(string recordStatus, int pageNumber , int pageSize )
         {
             RecordStatus = recordStatus;
+            PageNumber = pageNumber;
+            PageSize = pageSize;
         }
     }
 
@@ -19,7 +24,7 @@ namespace FSP.Application.Query
 
         public Task<List<AnimalRecordDto>> Handle(GetAllAnimalRecordQuery request, CancellationToken cancellationToken)
         {
-            return  _animalRepository.GetAllRecords(request.RecordStatus);
+            return  _animalRepository.GetAllRecords(request.RecordStatus, request.PageNumber, request.PageSize);
         }
     }
 }
