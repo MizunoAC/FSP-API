@@ -4,4 +4,7 @@ SELECT
 FROM 
     [dbo].[UserDomain] ud
 INNER JOIN 
-    [dbo].[UserRecords] ur ON ud.[UserId] = ur.[UserId]
+    [dbo].[UserInformation] ui ON ui.UserID = ud.UserID AND ui.[Delete] = 0
+LEFT JOIN 
+    [dbo].[UserRecords] ur ON ud.[UserId] = ur.[UserId] and ur.RecordState NOT IN (3)
+	

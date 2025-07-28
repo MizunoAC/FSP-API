@@ -8,11 +8,15 @@ namespace FSP.Application.Query
     {
         public string UserId { get; set; }
         public string RecordStatus { get; set; }
-        public GetAnimalRecordByUserQuery(string userId, string recordStatus)
+        public int PageNumber { get; set; }
+        public int PageSize { get; set; }
+
+        public GetAnimalRecordByUserQuery(string userId, string recordStatus, int pageNumber, int pageSize)
         {
             UserId = userId;
             RecordStatus = recordStatus;
-
+            PageSize = pageSize;
+            PageNumber = pageNumber;
         }
     }
 
@@ -27,7 +31,7 @@ namespace FSP.Application.Query
 
         public Task<List<AnimalRecordDto>> Handle(GetAnimalRecordByUserQuery request, CancellationToken cancellationToken)
         {
-            return _animalRepository.GetRecordsByUserId(request.UserId, request.RecordStatus);
+            return _animalRepository.GetRecordsByUserId(request.UserId, request.RecordStatus, request.PageNumber, request.PageSize);
         }
     }
 }

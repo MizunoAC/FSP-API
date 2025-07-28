@@ -12,7 +12,7 @@ using MediatR;
 
 namespace FSP.Application.Query
 {
-    public class UserAuthenticationQuery : IRequest<string>
+    public class UserAuthenticationQuery : IRequest<TokenResult>
     {
         public UserAuthentication User { get; set; }
 
@@ -22,14 +22,14 @@ namespace FSP.Application.Query
         }
     }
 
-    public class UserAuthenticationQueryHandler : IRequestHandler<UserAuthenticationQuery, string>
+    public class UserAuthenticationQueryHandler : IRequestHandler<UserAuthenticationQuery, TokenResult>
     {
         private readonly IAuthenticationRepository _Repository;
         public UserAuthenticationQueryHandler(IAuthenticationRepository Repository)
         {
             _Repository = Repository;
         }
-        public async Task<string> Handle(UserAuthenticationQuery request, CancellationToken cancellationToken)
+        public async Task<TokenResult> Handle(UserAuthenticationQuery request, CancellationToken cancellationToken)
         {
             var result = await _Repository.Authentication(request.User);
 
@@ -37,7 +37,7 @@ namespace FSP.Application.Query
             {
                 throw new HttpRequestException(result.Message, null, HttpStatusCode.Unauthorized);
             }
-            return result.Message;
+            return result;
         }
     }
 }

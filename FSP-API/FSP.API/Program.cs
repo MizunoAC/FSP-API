@@ -1,15 +1,16 @@
+using FSP.Application.command;
+using FSP.Domain.Models.Wrapper;
+using FSP.Infrastructure.Middleware;
+using FSP.Infrastructure.Repository;
+using FSP.Infrastructure.Repository.Contracts;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using NLog.Extensions.Logging;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Data.SqlClient;
-using FSP.Infrastructure.Repository.Contracts;
-using FSP.Application.command;
-using FSP.Infrastructure.Repository;
-using System.Security.Cryptography;
-using FSP.Domain.Models.Wrapper;
-using Microsoft.AspNetCore.Diagnostics;
 using System.Net;
+using System.Security.Cryptography;
 
 internal class Program
 {
@@ -66,11 +67,9 @@ internal class Program
         builder.Services.AddScoped<IUserRepository, UsersRepository>();
         builder.Services.AddScoped<IAuthenticationRepository, AuthenticationRepository>();
         builder.Services.AddScoped<IAnimalRepository, AnimalsRepository>();
+        builder.Services.AddScoped<IAdminRepository, AdminRepository>();
 
-        builder.Host.ConfigureLogging((hostingContext, logging) =>
-        {
-            logging.AddNLog();
-        });
+        builder.Logging.AddNLog();
 
         builder.Services.AddAutoMapper(typeof(Program));
         builder.Services.AddControllers();
@@ -81,6 +80,8 @@ internal class Program
         var app = builder.Build();
 
         // Configure the HTTP request pipeline.
+        app.UseMiddleware<ExceptionHandlingMiddleware>();
+
         if (app.Environment.IsDevelopment())
         {
             app.UseSwagger();
@@ -96,36 +97,7 @@ internal class Program
 
         app.UseAuthentication();
         app.UseAuthorization();
-
-        app.UseExceptionHandler(appError =>
-        {
-            appError.Run(async context =>
-            {
-                var exception = context.Features.Get<IExceptionHandlerFeature>()?.Error;
-                context.Response.ContentType = "application/json";
-
-                if (exception is HttpRequestException httpEx && httpEx.StatusCode == HttpStatusCode.Unauthorized)
-                {
-                    context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-                    await context.Response.WriteAsJsonAsync(new
-                    {
-                        status = 401,
-                        error = httpEx.Message
-                    });
-                }
-                else
-                {
-                    context.Response.StatusCode = StatusCodes.Status500InternalServerError;
-                    await context.Response.WriteAsJsonAsync(new
-                    {
-                        status = 500,
-                        error = "Unexpected error"
-                    });
-                }
-            });
-        });
         app.MapControllers();
-
         app.Run();
     }
 }

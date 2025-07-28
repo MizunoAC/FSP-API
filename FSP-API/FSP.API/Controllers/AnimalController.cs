@@ -32,13 +32,13 @@ namespace FSP_API.Controladores
         #region UserAnimalRecord
 
         /// <summary>
-        /// creates a new record for the user.
+        /// Creates a new record for the authenticated user.
         /// </summary>
-        /// <param name="record">The object with the new record data.</param>
-        /// <returns>Returns a confirmation message to let you know if the record was added or if an error occurred while adding it.</returns>
-        /// <response code="200">User created successfully.</response>
-        /// <response code="400">Invalid data.</response>
-        /// <response code="401">Unauthorized.</response>
+        /// <param name="record">The object containing the new record data.</param>
+        /// <returns>Returns a confirmation message indicating whether the record was successfully added or if an error occurred.</returns>
+        /// <response code="200">Record created successfully.</response>
+        /// <response code="400">Invalid data provided.</response>
+        /// <response code="401">Unauthorized access.</response>
         [Authorize]
         [HttpPost("NewRecord")]
         public async Task<IActionResult> NewRecord([FromBody] AnimalRecordRequest record)
@@ -56,16 +56,18 @@ namespace FSP_API.Controladores
         }
 
         /// <summary>
-        /// Retrieves a list of records that a user has created.
+        /// Retrieves a paginated list of animal records created by the authenticated user, filtered by status.
         /// </summary>
-        /// <param name="recordStatus">the status of the records Accepted, Rejected or Pending.</param>
-        /// <returns>Returns a list of records that a user has created depending on the status it is in.</returns>
-        /// <response code="200">List<AnimalRecordDto>.</response>
-        /// <response code="400">Invalid data.</response>
-        /// <response code="401">Unauthorized.</response>
+        /// <param name="recordStatus">The status of the records: Accepted, Rejected, or Pending.</param>
+        /// <param name="page">The page number for pagination.</param>
+        /// <param name="size">The number of records per page.</param>
+        /// <returns>Returns a paginated list of records created by the user, filtered by status.</returns>
+        /// <response code="200">Returns a list of AnimalRecordDto objects.</response>
+        /// <response code="400">Invalid parameters or request data.</response>
+        /// <response code="401">Unauthorized access.</response>
         [Authorize]
         [HttpGet("AnimalRecordByUser/{recordStatus}")]
-        public async Task<IActionResult> GetRecordsByUser([FromRoute] string recordStatus)
+        public async Task<IActionResult> GetRecordsByUser([FromRoute] string recordStatus, [FromQuery] int page, [FromQuery] int size)
         {
             var UserId = this.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
@@ -74,7 +76,7 @@ namespace FSP_API.Controladores
                 return Unauthorized();
             }
 
-            var query = new GetAnimalRecordByUserQuery(UserId, recordStatus);
+            var query = new GetAnimalRecordByUserQuery(UserId, recordStatus, page, size);
             var result = await _mediator.Send(query);
             return Ok(result);
         }
@@ -84,39 +86,18 @@ namespace FSP_API.Controladores
         #region AnimalIndex
 
         /// <summary>
-        /// Retrieves a list of records that a user has created.
+        /// Retrieves a paginated list of animals in the catalog.
         /// </summary>
-        /// <param name="AnimalIndexRequest">the object with the data of the new index to add.</param>
-        /// <returns>Returns a confirmation message to let you know if the Indexwas added or if an error occurred while adding it.</returns>
-        /// <response code="200">MessageResponse.</response>
-        /// <response code="400">Invalid data.</response>
-        /// <response code="401">Unauthorized.</response>
-        [Authorize(Roles = "Admin")]
-        [HttpPost("new-catalog")]
-        public async Task<ActionResult> AddNewAnimalCatalog([FromBody] CatalogRequest model)
-        {
-            var UserId = this.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
-            if (UserId == null)
-            {
-                return Unauthorized();
-            }
-
-            var command = new AddNewCatalogCommand(model);
-            var result = await _mediator.Send(command);
-            return Ok(result);
-        }
-
-        /// <summary>
-        /// Retrieves the catalog of animals in the database.
-        /// </summary>
-        /// <returns>List<CatalogDto></returns>
-        /// <response code="200">MessageResponse.</response>
-        /// <response code="400">Invalid data.</response>
-        /// <response code="401">Unauthorized.</response>
+        /// <param name="page">The page number for pagination.</param>
+        /// <param name="size">The number of items per page.</param>
+        /// <returns>Returns a paginated list of CatalogDto objects.</returns>
+        /// <response code="200">Successfully retrieved the catalog. Returns a list of CatalogDto.</response>
+        /// <response code="400">Invalid pagination parameters.</response>
+        /// <response code="401">Unauthorized access.</response>
         [Authorize]
         [HttpGet("Catalog")]
-        public async Task<IActionResult> GetCatalog()
+       public async Task<IActionResult> GetCatalog([FromQuery] int page, [FromQuery] int size)
+
         {
             var UserId = this.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (UserId == null)
@@ -124,23 +105,22 @@ namespace FSP_API.Controladores
                 return Unauthorized();
             }
 
-            var query = new GetCatalogQuery();
+            var query = new GetCatalogQuery(page, size);
             var result = await _mediator.Send(query);
             return Ok(result);
         }
 
         /// <summary>
-        /// Retrieves a catalog using the animal's common noun as a filter.
+        /// Retrieves a catalog filtered by the animal's common noun.
         /// </summary>
-        /// <returns><CatalogDto></returns>
-        /// <response code="200">MessageResponse.</response>
-        /// <response code="400">Invalid data.</response>
-        /// <response code="401">Unauthorized.</response>
+        /// <returns>A CatalogDto object.</returns>
+        /// <response code="200">Returns the requested catalog.</response>
+        /// <response code="400">Invalid input data.</response>
+        /// <response code="401">Unauthorized access.</response>
         [Authorize]
         [HttpGet("byCommonNoun/{CommonNoun}")]
         public async Task<IActionResult> GetCatalogByCommonNoun([FromRoute] string CommonNoun)
         {
-
             var UserId = this.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
             if (UserId == null)
@@ -153,50 +133,28 @@ namespace FSP_API.Controladores
             return Ok(result);
         }
 
-        #endregion
-
-
         /// <summary>
-        /// Retrieves a list of records that a user has created.
+        /// Retrieves a catalog map.
         /// </summary>
-        /// <param name="recordStatus">the status of the records Accepted, Rejected or Pending.</param>
-        /// <returns>Returns a list of records that a user has created depending on the status it is in.</returns>
-        /// <response code="200">List<AnimalRecordDto>.</response>
-        /// <response code="400">Invalid data.</response>
-        /// <response code="401">Unauthorized.</response>
-        [Authorize(Roles = "Admin")]
-        [HttpGet("all-records/{recordStatus}")]
-
-        public async Task<IActionResult> GetAllRecords([FromRoute] string recordStatus)
+        /// <returns>A CatalogMapDto object.</returns>
+        /// <response code="200">Returns the requested catalog map.</response>
+        /// <response code="400">Invalid input data.</response>
+        /// <response code="401">Unauthorized access.</response>
+        [Authorize]
+        [HttpGet("map/{CatalogId}")]
+        public async Task<IActionResult> GetCatalogMap([FromRoute] int CatalogId)
         {
             var UserId = this.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-            if (UserId == null || recordStatus == null)
+            if (UserId == null)
             {
                 return Unauthorized();
             }
 
-            var query = new GetAllAnimalRecordQuery(recordStatus);
+            var query = new GetCatalogMapQuery(CatalogId);
             var result = await _mediator.Send(query);
             return Ok(result);
         }
-
-        [HttpPatch("process-record/{recordId}")]
-
-        public async Task<IActionResult> ProcessRecords([FromRoute] int recordId, [FromQuery] string status)
-        {
-            var UserId = this.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            string root = _env.ContentRootPath;
-
-            if (UserId == null || status == null)
-            {
-                return Unauthorized();
-            }
-
-            var command = new ProcessRecordCommand(recordId, status, root);
-            var result = await _mediator.Send(command);
-            return Ok(result);
-
-        }
+        #endregion
     }
 }

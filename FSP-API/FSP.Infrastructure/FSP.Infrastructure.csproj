@@ -9,9 +9,13 @@
   <ItemGroup>
     <None Remove="sql\GetRecordsByUser.sql" />
     <None Remove="sql\GetUserById.sql" />
+    <None Remove="sql\IsValidRefreshToken.sql" />
   </ItemGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="sql\GetCatalogMap.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </EmbeddedResource>
     <EmbeddedResource Include="sql\GetEmailData.sql">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </EmbeddedResource>
@@ -33,11 +37,16 @@
     <EmbeddedResource Include="sql\GetUserById.sql">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </EmbeddedResource>
+    <EmbeddedResource Include="sql\IsValidRefreshToken.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </EmbeddedResource>
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="DotNetEnv" Version="3.1.1" />
     <PackageReference Include="MediatR" Version="12.5.0" />
     <PackageReference Include="MediatR.Contracts" Version="2.0.1" />
+    <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.2.0" />
     <PackageReference Include="Microsoft.Data.SqlClient" Version="6.0.1" />
     <PackageReference Include="Microsoft.Data.SqlClient.SNI.runtime" Version="6.0.2" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="7.0.0" />
