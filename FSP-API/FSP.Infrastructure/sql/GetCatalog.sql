@@ -3,7 +3,8 @@
 
 DECLARE @Offset INT = (@PageNumber - 1) * @PageSize;
 
-SELECT WC.[Specie],
+SELECT wc.[CatalogId],
+       WC.[Specie],
        WC.[CommonNoun],
 	   WC.[Description],
 	   WC.[Habits],

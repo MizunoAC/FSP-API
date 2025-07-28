@@ -15,16 +15,16 @@ namespace FSP.Application.Command
 
         public class AddNewCatalogCommandHandler : IRequestHandler<AddNewCatalogCommand, MessageResponse>
         {
-            private readonly IAnimalRepository _animalRepository;
+            private readonly IAdminRepository _repository;
 
-            public AddNewCatalogCommandHandler(IAnimalRepository animalRepository)
+            public AddNewCatalogCommandHandler(IAdminRepository Repository)
             {
-                _animalRepository = animalRepository;
+                _repository = Repository;
             }
 
             public async Task<MessageResponse> Handle(AddNewCatalogCommand request, CancellationToken cancellationToken) 
             {
-                return await _animalRepository.InsertNewCatalog(request.Model);
+                return await _repository.InsertNewCatalog(request.Model);
             }
         }
 
