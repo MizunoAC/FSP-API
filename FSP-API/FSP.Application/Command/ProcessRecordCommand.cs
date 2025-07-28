@@ -20,23 +20,23 @@ namespace FSP.Application.Command
 
     public class UpdateRecordStatusHandler : IRequestHandler<ProcessRecordCommand, MessageResponse>
     {
-        private readonly IAnimalRepository _animalRepository;
+        private readonly IAdminRepository _repository;
 
-        public UpdateRecordStatusHandler(IAnimalRepository animalRepository)
+        public UpdateRecordStatusHandler(IAdminRepository Repository)
         {
-            _animalRepository = animalRepository;
+            _repository = Repository;
         }
 
         public async Task<MessageResponse> Handle(ProcessRecordCommand request, CancellationToken cancellationToken)
         {
             Enum.TryParse<RecordStatus>(request.Status, ignoreCase: true, out var statusout);
-            var result = await _animalRepository.ProcessRecord(request.RecordId, request.Status);
+            var result = await _repository.ProcessRecord(request.RecordId, request.Status);
 
             if (statusout == RecordStatus.Accepted && result != null)
             {
-                var emailData = await _animalRepository.GetEmailData(request.RecordId);
+                var emailData = await _repository.GetEmailData(request.RecordId);
                 emailData.Status = "Aceptado";
-                _animalRepository.SendEmailNotificacion(emailData, request.Rootenv);
+                _repository.SendEmailNotificacion(emailData, request.Rootenv);
             }
             return result;
         }

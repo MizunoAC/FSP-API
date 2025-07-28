@@ -129,10 +129,10 @@ namespace FSP.Infrastructure.Repository
                 cmd.Parameters.AddWithValue("@UserId", userId);
                 cmd.Parameters.AddWithValue("@Token", token);
                 cmd.Parameters.AddWithValue("@ExpiresAt", expiresAt);
-                await cnn.OpenAsync();
-                await cmd.ExecuteNonQueryAsync();
-                await cnn.CloseAsync();
-            }
+                    await cnn.OpenAsync();
+                    await cmd.ExecuteNonQueryAsync();
+                    await cnn.CloseAsync();
+                }
         }
 
         public string TokenGenerationRSPasswordReset(string User)
@@ -310,11 +310,11 @@ namespace FSP.Infrastructure.Repository
 
                 var typeClaim = principal.Claims.FirstOrDefault(c => c.Type == "typ");
                 if (typeClaim?.Value != "refresh")
-                    throw new SecurityTokenException("Token no es de tipo refresh");
+                    throw new SecurityTokenException("Token is not of type refresh");
 
                 var userId = principal.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
                 if (string.IsNullOrEmpty(userId))
-                    throw new SecurityTokenException("Token inválido: sin usuario");
+                    throw new SecurityTokenException("Invalid token: no user");
 
                 var isValid = IsValidRefreshToken(refreshToken, userId);
                 if (isValid)
@@ -328,7 +328,7 @@ namespace FSP.Infrastructure.Repository
                     return new TokenResult
                     {
                         Error = true,
-                        Message = "no autprozad"
+                        Message = "An error occurred while validating the refresh token."
                     };
 
                 }
@@ -338,7 +338,7 @@ namespace FSP.Infrastructure.Repository
                 return new TokenResult
                 {
                     Error = true,
-                    Message = "no autprozad"
+                    Message = ex.Message
                 };
             }
 

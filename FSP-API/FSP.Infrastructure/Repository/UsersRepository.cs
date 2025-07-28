@@ -123,7 +123,6 @@ namespace FSP.Infrastructure.Repository
                     result.Records = records;
                     int.TryParse(reader["Users"].ToString(), out int users);
                     result.Users = users;
-
                 }
             }
                 return result;
