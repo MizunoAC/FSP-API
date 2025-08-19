@@ -40,6 +40,7 @@ namespace FSP.Infrastructure.Repository
                 cmd.CommandType = System.Data.CommandType.StoredProcedure;
                 cmd.Parameters.Clear();
                 cmd.Parameters.AddWithValue("@UserId", userId);
+                cmd.Parameters.AddWithValue("@CatalogId", model.CatalogId);
                 cmd.Parameters.AddWithValue("@CommonNoun", model.CommonNoun);
                 cmd.Parameters.AddWithValue("@AnimalState", model.AnimalState);
                 cmd.Parameters.AddWithValue("@Description", model.Description);
@@ -258,6 +259,38 @@ namespace FSP.Infrastructure.Repository
                 }
 
                 result.CatalogId = catalogId;
+                await reader.DisposeAsync();
+                await conn.CloseAsync();
+            }
+            return result;
+        }
+
+        public async Task<IList<CatalogCommonNoun>> GetCommounName()
+        {
+            var result = new List<CatalogCommonNoun>();
+            var sql = ResourceHelper.GetResource("GetCommonNoun");
+            using (SqlConnection conn = new SqlConnection(_conn))
+            using (var cmd = new SqlCommand(sql, conn))
+            {
+                cmd.CommandType = System.Data.CommandType.Text;
+                cmd.Parameters.Clear();
+
+                await conn.OpenAsync();
+
+                var reader = await cmd.ExecuteReaderAsync();
+
+                while (await reader.ReadAsync())
+                {
+                    int.TryParse(reader["CatalogId"].ToString(), out int catalogId);
+                    var commounNoun = new CatalogCommonNoun
+                    {
+                        CommonNoun = reader["CommonNoun"].ToString(),
+                        CatalogId = catalogId
+                    };
+
+                    result.Add(commounNoun);
+                }
+
                 await reader.DisposeAsync();
                 await conn.CloseAsync();
             }

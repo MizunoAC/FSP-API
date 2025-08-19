@@ -2,7 +2,7 @@
 {
     public class AnimalRecordRequest
     {
-        //public string UserId { get; set; }
+        public int CatalogId { get; set; }
         public string CommonNoun { get; set; }
         public int AnimalState { get; set; } 
         public string? Description {  get; set; }

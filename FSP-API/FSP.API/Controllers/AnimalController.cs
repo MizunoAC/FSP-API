@@ -95,6 +95,31 @@ namespace FSP_API.Controladores
         /// <response code="400">Invalid pagination parameters.</response>
         /// <response code="401">Unauthorized access.</response>
         [Authorize]
+        [HttpGet("common-noun")]
+        public async Task<IActionResult> GetCatalogCommonNoun()
+
+        {
+            var UserId = this.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (UserId == null)
+            {
+                return Unauthorized();
+            }
+
+            var query = new GetCatalogCommonNounQuery();
+            var result = await _mediator.Send(query);
+            return Ok(result);
+        }
+
+        /// <summary>
+        /// Retrieves a paginated list of animals in the catalog.
+        /// </summary>
+        /// <param name="page">The page number for pagination.</param>
+        /// <param name="size">The number of items per page.</param>
+        /// <returns>Returns a paginated list of CatalogDto objects.</returns>
+        /// <response code="200">Successfully retrieved the catalog. Returns a list of CatalogDto.</response>
+        /// <response code="400">Invalid pagination parameters.</response>
+        /// <response code="401">Unauthorized access.</response>
+        [Authorize]
         [HttpGet("Catalog")]
        public async Task<IActionResult> GetCatalog([FromQuery] int page, [FromQuery] int size)
 

@@ -11,5 +11,6 @@ namespace FSP.Infrastructure.Repository.Contracts
         Task<CatalogDto> GetCatalogByCommonNoun(string commonNoun);
         Task<List<AnimalRecordDto>> GetAllRecords(string recordStatus, int pageNumber, int pageSize);
         Task<CatalogMapDto> GetCatalogMap(int catalogId);
+        Task<IList<CatalogCommonNoun>> GetCommounName();
     }
 }
