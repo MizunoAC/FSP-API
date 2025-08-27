@@ -4,7 +4,7 @@ using MediatR;
 
 namespace FSP.Application.Query
 {
-    public class GetCatalogQuery :IRequest<List<CatalogDto>>
+    public class GetCatalogQuery :IRequest<CatalogResponse>
     {
         public int PageSize { get; set; }
         public int PageNumber { get; set; }
@@ -16,7 +16,7 @@ namespace FSP.Application.Query
 
     }
 
-    public class GetCatalogQueryHandler : IRequestHandler<GetCatalogQuery, List<CatalogDto>>
+    public class GetCatalogQueryHandler : IRequestHandler<GetCatalogQuery, CatalogResponse>
     {
         private readonly IAnimalRepository _animalRepository;
 
@@ -25,7 +25,7 @@ namespace FSP.Application.Query
            _animalRepository = animalRepository; 
         }
 
-        public async Task<List<CatalogDto>> Handle(GetCatalogQuery request, CancellationToken cancellationToken)
+        public async Task<CatalogResponse> Handle(GetCatalogQuery request, CancellationToken cancellationToken)
         {
            return await _animalRepository.GetCatalog(request.PageNumber, request.PageSize);
         }

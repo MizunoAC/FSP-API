@@ -52,7 +52,7 @@ namespace FSP.Infrastructure.Repository
         {
             var user = new UserModelDto();
             using (SqlConnection conn = new SqlConnection(_con))
-            using (var cmd = new SqlCommand("[dbo].[GetUserById]", conn)) 
+            using (var cmd = new SqlCommand("[dbo].[GetUserById]", conn))
             {
                 cmd.CommandType = System.Data.CommandType.StoredProcedure;
                 cmd.Parameters.Clear();
@@ -61,7 +61,7 @@ namespace FSP.Infrastructure.Repository
                 await conn.OpenAsync();
                 var reader = await cmd.ExecuteReaderAsync();
 
-                while (await reader.ReadAsync()) 
+                while (await reader.ReadAsync())
                 {
                     user.UserName = reader["UserName"].ToString();
                     user.Name = reader["Name"].ToString();
@@ -124,8 +124,10 @@ namespace FSP.Infrastructure.Repository
                     int.TryParse(reader["Users"].ToString(), out int users);
                     result.Users = users;
                 }
+                await conn.CloseAsync();
+                await reader.DisposeAsync();
             }
-                return result;
+            return result;
         }
     }
 }
