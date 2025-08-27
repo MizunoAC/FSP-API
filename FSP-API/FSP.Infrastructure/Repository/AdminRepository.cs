@@ -80,6 +80,9 @@ namespace FSP.Infrastructure.Repository
                     bool.TryParse(reader["IsError"].ToString(), out bool isError);
                     result.Error = isError;
                 }
+
+                await conn.CloseAsync();
+                await reader.DisposeAsync();
             }
             return result;
         }
@@ -102,6 +105,8 @@ namespace FSP.Infrastructure.Repository
                     result.Email = reader["Email"].ToString();
                     result.UserName = reader["FullName"].ToString();
                 }
+                await con.CloseAsync();
+                await reader.DisposeAsync();
             }
             return result;
         }

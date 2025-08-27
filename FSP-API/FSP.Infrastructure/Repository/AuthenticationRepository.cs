@@ -64,6 +64,7 @@ namespace FSP.Infrastructure.Repository
 
                 }
                 await conn.CloseAsync();
+                await reader.DisposeAsync();
             }
             return result;
         }
@@ -129,10 +130,10 @@ namespace FSP.Infrastructure.Repository
                 cmd.Parameters.AddWithValue("@UserId", userId);
                 cmd.Parameters.AddWithValue("@Token", token);
                 cmd.Parameters.AddWithValue("@ExpiresAt", expiresAt);
-                    await cnn.OpenAsync();
-                    await cmd.ExecuteNonQueryAsync();
-                    await cnn.CloseAsync();
-                }
+                await cnn.OpenAsync();
+                await cmd.ExecuteNonQueryAsync();
+                await cnn.CloseAsync();
+            }
         }
 
         public string TokenGenerationRSPasswordReset(string User)
@@ -183,7 +184,9 @@ namespace FSP.Infrastructure.Repository
                     result.UserName = reader["UserName"].ToString();
                 }
                 await conn.CloseAsync();
+                await reader.DisposeAsync();
             }
+
             if (result != null && !result.Status.Contains("The Email"))
             {
                 var templatePath = Path.Combine(AppContext.BaseDirectory, "Templates", "Email_Notification_Reset_Password.html");

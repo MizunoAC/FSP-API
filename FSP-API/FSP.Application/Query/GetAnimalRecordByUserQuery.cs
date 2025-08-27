@@ -4,7 +4,7 @@ using MediatR;
 
 namespace FSP.Application.Query
 {
-    public class GetAnimalRecordByUserQuery : IRequest<List<AnimalRecordDto>>
+    public class GetAnimalRecordByUserQuery : IRequest<AnimalRecordResponse>
     {
         public string UserId { get; set; }
         public string RecordStatus { get; set; }
@@ -20,7 +20,7 @@ namespace FSP.Application.Query
         }
     }
 
-    public class GetAnimalRecordByUserQueryHandler : IRequestHandler<GetAnimalRecordByUserQuery, List<AnimalRecordDto>>
+    public class GetAnimalRecordByUserQueryHandler : IRequestHandler<GetAnimalRecordByUserQuery, AnimalRecordResponse>
     {
         private readonly IAnimalRepository _animalRepository;
 
@@ -29,7 +29,7 @@ namespace FSP.Application.Query
             _animalRepository = animalRepository;
         }
 
-        public Task<List<AnimalRecordDto>> Handle(GetAnimalRecordByUserQuery request, CancellationToken cancellationToken)
+        public Task<AnimalRecordResponse> Handle(GetAnimalRecordByUserQuery request, CancellationToken cancellationToken)
         {
             return _animalRepository.GetRecordsByUserId(request.UserId, request.RecordStatus, request.PageNumber, request.PageSize);
         }

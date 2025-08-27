@@ -1,16 +1,17 @@
-﻿using Microsoft.Data.SqlClient;
-using FSP.Domain.Models;
-using FSP.Infrastructure.Repository.Contracts;
-using FSP.Domain.Models.DTO;
+﻿using FSP.Domain.Enums;
 using FSP.Domain.Helpers;
-using System.Data;
+using FSP.Domain.Models;
+using FSP.Domain.Models.DTO;
 using FSP.Domain.Models.Wrapper;
-using FSP.Domain.Enums;
-using RazorEngineCore;
-using System.Net.Mail;
-using System.Net;
+using FSP.Infrastructure.Repository.Contracts;
+using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
+using RazorEngineCore;
+using Sprache;
+using System.Data;
 using System.IO;
+using System.Net;
+using System.Net.Mail;
 
 namespace FSP.Infrastructure.Repository
 {
@@ -63,9 +64,9 @@ namespace FSP.Infrastructure.Repository
             return result;
         }
 
-        public async Task<List<AnimalRecordDto>> GetRecordsByUserId(string userId, string recordStatus, int pageNumber, int pageSize)
+        public async Task<AnimalRecordResponse> GetRecordsByUserId(string userId, string recordStatus, int pageNumber, int pageSize)
         {
-            var results = new List<AnimalRecordDto>();
+            var result = new AnimalRecordResponse();
             var sql = ResourceHelper.GetResource("GetRecordsByUser");
 
             using (SqlConnection conn = new SqlConnection(_conn))
@@ -91,7 +92,7 @@ namespace FSP.Infrastructure.Repository
                         var base64String = Convert.ToBase64String(binaryData);
                         base64Image = $"data:image/jpeg;base64,{base64String}";
                     }
-                    results.Add(new AnimalRecordDto
+                    result.Records.Add(new AnimalRecordDto
                     {
                         RecordId = recordId,
                         CommonNoun = reader["CommonNoun"].ToString(),
@@ -101,15 +102,32 @@ namespace FSP.Infrastructure.Repository
                         img = base64Image
                     });
                 }
+
+                if (await reader.NextResultAsync())
+                {
+                    if (await reader.ReadAsync())
+                    {
+                        result.Pagination = new PaginationModel
+                        {
+                            Page = Convert.ToInt32(reader["page"]),
+                            Size = Convert.ToInt32(reader["size"]),
+                            Total = Convert.ToInt32(reader["total"]),
+                            TotalPages = Convert.ToInt32(reader["totalPages"]),
+                            HasNext = Convert.ToBoolean(reader["hasNext"]),
+                            HasPrev = Convert.ToBoolean(reader["hasPrev"])
+                        };
+                    }
+                }
                 await conn.CloseAsync();
                 await reader.DisposeAsync();
+                
+                return result;
             }
-            return results;
         }
 
-        public async Task<List<AnimalRecordDto>> GetAllRecords(string recordStatus, int pageNumber, int pageSize)
+        public async Task<AnimalRecordResponse> GetAllRecords(string recordStatus, int pageNumber, int pageSize)
         {
-            var results = new List<AnimalRecordDto>();
+            var results = new AnimalRecordResponse();
             var sql = ResourceHelper.GetResource("GetAllRecords");
 
             using (SqlConnection conn = new SqlConnection(_conn))
@@ -134,7 +152,7 @@ namespace FSP.Infrastructure.Repository
                         base64Image = $"data:image/jpeg;base64,{base64String}";
                     }
 
-                    results.Add(new AnimalRecordDto
+                    results.Records.Add(new AnimalRecordDto
                     {
                         RecordId = recordId,
                         CommonNoun = reader["CommonNoun"].ToString(),
@@ -143,6 +161,22 @@ namespace FSP.Infrastructure.Repository
                         Location = reader["Location"].ToString(),
                         img = base64Image
                     });
+                }
+
+                if (await reader.NextResultAsync())
+                {
+                    if (await reader.ReadAsync())
+                    {
+                        results.Pagination = new PaginationModel
+                        {
+                            Page = Convert.ToInt32(reader["page"]),
+                            Size = Convert.ToInt32(reader["size"]),
+                            Total = Convert.ToInt32(reader["total"]),
+                            TotalPages = Convert.ToInt32(reader["totalPages"]),
+                            HasNext = Convert.ToBoolean(reader["hasNext"]),
+                            HasPrev = Convert.ToBoolean(reader["hasPrev"])
+                        };
+                    }
                 }
                 await conn.CloseAsync();
                 await reader.DisposeAsync();
@@ -154,9 +188,9 @@ namespace FSP.Infrastructure.Repository
 
         #region Catalog
 
-        public async Task<List<CatalogDto>> GetCatalog(int pageNumber, int pageSize)
+        public async Task<CatalogResponse> GetCatalog(int pageNumber, int pageSize)
         {
-            var results = new List<CatalogDto>();
+            var results = new CatalogResponse();
             var sql = ResourceHelper.GetResource("GetCatalog");
             using (SqlConnection conn = new SqlConnection(_conn))
             using (var cmd = new SqlCommand(sql, conn))
@@ -173,7 +207,7 @@ namespace FSP.Infrastructure.Repository
                     var base64String = Convert.ToBase64String(binaryData);
                     base64Image = $"data:image/jpeg;base64,{base64String}";
                     int.TryParse(reader["CatalogId"].ToString(), out int catalogId);
-                    results.Add(new CatalogDto
+                    results.Catalog.Add(new CatalogDto
                     {
                         CatalogId = catalogId,
                         Specie = reader["Specie"].ToString(),
@@ -188,6 +222,23 @@ namespace FSP.Infrastructure.Repository
                         Image = base64Image
                     });
                 }
+                if (await reader.NextResultAsync())
+                {
+                    if (await reader.ReadAsync())
+                    {
+                        results.Pagination = new PaginationModel
+                        {
+                            Page = Convert.ToInt32(reader["page"]),
+                            Size = Convert.ToInt32(reader["size"]),
+                            Total = Convert.ToInt32(reader["total"]),
+                            TotalPages = Convert.ToInt32(reader["totalPages"]),
+                            HasNext = Convert.ToBoolean(reader["hasNext"]),
+                            HasPrev = Convert.ToBoolean(reader["hasPrev"])
+                        };
+                    }
+                }
+                await conn.CloseAsync();
+                await reader.DisposeAsync();
             }
             return results;
         }
@@ -229,6 +280,9 @@ namespace FSP.Infrastructure.Repository
                     result.Category = reader["Category"].ToString();
                     result.Image = base64Image;
                 }
+
+                await conn.CloseAsync();
+                await reader.DisposeAsync();
             }
             return result;
         }
@@ -243,9 +297,9 @@ namespace FSP.Infrastructure.Repository
                 cmd.CommandType = System.Data.CommandType.Text;
                 cmd.Parameters.Clear();
                 cmd.Parameters.AddWithValue("@CatalogId", catalogId);
-               
+
                 await conn.OpenAsync();
-               
+
                 var reader = await cmd.ExecuteReaderAsync();
 
                 while (await reader.ReadAsync())
@@ -297,6 +351,5 @@ namespace FSP.Infrastructure.Repository
             return result;
         }
         #endregion
-
     }
 }
