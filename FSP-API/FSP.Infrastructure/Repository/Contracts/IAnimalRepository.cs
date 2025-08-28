@@ -8,7 +8,7 @@ namespace FSP.Infrastructure.Repository.Contracts
         Task<MessageResponse> RegisterNewRecord(AnimalRecordRequest model, string userId);
         Task<AnimalRecordResponse> GetRecordsByUserId(string userId, string recordStatus, int pageNumber, int pageSize);
         Task<CatalogResponse> GetCatalog(int pageNumber, int pageSize);
-        Task<CatalogDto> GetCatalogByCommonNoun(string commonNoun);
+        Task<CatalogDto> GetCatalogById(int catalogId);
         Task<AnimalRecordResponse> GetAllRecords(string recordStatus, int pageNumber, int pageSize);
         Task<CatalogMapDto> GetCatalogMap(int catalogId);
         Task<IList<CatalogCommonNoun>> GetCommounName();

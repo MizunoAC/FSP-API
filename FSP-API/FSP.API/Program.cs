@@ -1,5 +1,6 @@
 using FSP.Application.command;
 using FSP.Domain.Models.Wrapper;
+using FSP.Infrastructure.Helpers;
 using FSP.Infrastructure.Middleware;
 using FSP.Infrastructure.Repository;
 using FSP.Infrastructure.Repository.Contracts;
@@ -67,7 +68,8 @@ internal class Program
         builder.Services.AddScoped<IUserRepository, UsersRepository>();
         builder.Services.AddScoped<IAuthenticationRepository, AuthenticationRepository>();
         builder.Services.AddScoped<IAnimalRepository, AnimalsRepository>();
-        builder.Services.AddScoped<IAdminRepository, AdminRepository>();
+        builder.Services.AddScoped<IAdminRepository, AdminRepository>(); 
+        builder.Services.AddScoped<IPdfGeneratorHelper, PdfGeneratorHelper>();
 
         builder.Logging.AddNLog();
 

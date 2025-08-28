@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ficha Informativa - {{commonNoun}}</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #FF6B6B;
+            --secondary: #4ECDC4;
+            --accent: #FFD166;
+            --dark: #1A535C;
+            --light: #F7F9F9;
+            --text: #2B2D42;
+            --transition: all 0.3s ease;
+        }
+
+        @page {
+            size: A4;
+            margin: 0;
+        }
+
+        body {
+            background: white;
+            color: var(--text);
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .container {
+            width: 210mm;
+            height: 297mm;
+            margin: auto;
+            padding: 10mm;
+            box-sizing: border-box;
+        }
+
+        .species-card {
+            display: flex;
+            flex-direction: column;
+            gap: 10px; /* reduce espacio vertical */
+        }
+
+        /* HEADER + IMAGE en línea */
+        .header-image-row {
+            display: flex;
+            justify-content: flex-start; /* imagen a la izquierda */
+            align-items: center;
+            gap: 20px; /* espacio entre imagen y gradiente */
+        }
+
+        .card-header {
+            flex: 1;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--dark) 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            position: relative;
+        }
+
+            .card-header::before {
+                content: "";
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: radial-gradient(circle at top right, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0) 60%);
+                z-index: 1;
+            }
+
+        .header-content {
+            position: relative;
+            z-index: 2;
+        }
+
+        .common-name {
+            font-size: 2.2rem;
+            font-weight: 800;
+            margin-bottom: 5px;
+        }
+
+        .scientific-name {
+            font-style: italic;
+            font-size: 1.2rem;
+            opacity: 0.9;
+            margin-bottom: 5px;
+        }
+
+        .category-badge {
+            background: var(--accent);
+            color: var(--dark);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 1rem;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+
+        /* Imagen circular auto-rellenable */
+        .image-container {
+            width: 180px;
+            height: 180px;
+            border-radius: 50%;
+            overflow: hidden;
+            border: 5px solid white;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            flex-shrink: 0;
+        }
+
+            .image-container::before {
+                content: "";
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                border-radius: 50%;
+                background: linear-gradient(135deg, rgba(255,215,102,0.2), rgba(78,205,196,0.2));
+                z-index: 1;
+            }
+
+        .species-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover; /* Auto-rellena y mantiene proporciones */
+            position: relative;
+            z-index: 2;
+        }
+
+        .card-content {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .info-section {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .description {
+            background: white;
+            padding: 10px;
+            border-radius: 8px;
+            border-left: 4px solid var(--secondary);
+            font-size: 1rem;
+            line-height: 1.4;
+        }
+
+        .details-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
+        }
+
+        .detail-card {
+            background: white;
+            border-radius: 8px;
+            padding: 8px;
+            border-top: 3px solid var(--primary);
+            font-size: 0.9rem;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+            .detail-card i {
+                font-size: 1.2rem;
+                color: var(--primary);
+                margin-bottom: 5px;
+            }
+
+            .detail-card h3 {
+                margin: 0 0 5px 0;
+                font-size: 1rem;
+                display: flex;
+                align-items: center;
+                gap: 5px;
+            }
+
+        /* Distribución con estilo original */
+        .distribution-section {
+            margin: 15px 0;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            background: white;
+        }
+
+        .distribution-header {
+            background: rgba(26,83,92,0.9);
+            color: white;
+            padding: 10px 15px;
+            font-weight: 600;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .footer {
+            text-align: center;
+            font-size: 0.8rem;
+            padding: 5px;
+            color: var(--dark);
+            margin-top: 5px;
+            background: rgba(255,255,255,0.9);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="species-card">
+
+            <!-- HEADER + IMAGE en línea -->
+            <div class="header-image-row">
+                <div class="image-container">
+                    <img src="{{image}}" alt="{{commonNoun}}" class="species-image">
+                </div>
+
+                <div class="card-header">
+                    <div class="header-content">
+                        <h1 class="common-name">{{commonNoun}}</h1>
+                        <div class="scientific-name">{{specie}}</div>
+                        <div class="category-badge">{{category}}</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-content">
+                <div class="info-section">
+                    <h2>Descripción</h2>
+                    <p class="description">{{description}}</p>
+
+                    <div class="details-grid">
+                        <div class="detail-card">
+                            <h3><i class="fas fa-sun"></i> Hábitos</h3>
+                            <p>{{habits}}</p>
+                        </div>
+                        <div class="detail-card">
+                            <h3><i class="fas fa-tree"></i> Hábitat</h3>
+                            <p>{{habitat}}</p>
+                        </div>
+                        <div class="detail-card">
+                            <h3><i class="fas fa-egg"></i> Reproducción</h3>
+                            <p>{{reproduction}}</p>
+                        </div>
+                        <div class="detail-card">
+                            <h3><i class="fas fa-apple-alt"></i> Alimentación</h3>
+                            <p>{{feeding}}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="distribution-section">
+                <div class="distribution-header">
+                    <i class="fas fa-map-marked-alt"></i> Distribución: {{distribution}}
+                </div>
+            </div>
+
+            <div class="footer">
+                Ficha informativa de especie | k'aaxil ba'alilche' | © 2025
+            </div>
+
+        </div>
+    </div>
+</body>
+</html>

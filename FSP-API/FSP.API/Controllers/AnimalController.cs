@@ -136,15 +136,15 @@ namespace FSP_API.Controladores
         }
 
         /// <summary>
-        /// Retrieves a catalog filtered by the animal's common noun.
+        /// Retrieves a catalog filtered by the Catalog Id.
         /// </summary>
         /// <returns>A CatalogDto object.</returns>
         /// <response code="200">Returns the requested catalog.</response>
         /// <response code="400">Invalid input data.</response>
         /// <response code="401">Unauthorized access.</response>
         [Authorize]
-        [HttpGet("byCommonNoun/{CommonNoun}")]
-        public async Task<IActionResult> GetCatalogByCommonNoun([FromRoute] string CommonNoun)
+        [HttpGet("by-Id/{CatalogId}")]
+        public async Task<IActionResult> GetCatalogById([FromRoute] int CatalogId)
         {
             var UserId = this.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
@@ -153,7 +153,7 @@ namespace FSP_API.Controladores
                 return Unauthorized();
             }
 
-            var query = new GetCatalogByCommonNounQuery(CommonNoun);
+            var query = new GetCatalogById(CatalogId);
             var result = await _mediator.Send(query);
             return Ok(result);
         }
@@ -179,6 +179,29 @@ namespace FSP_API.Controladores
             var query = new GetCatalogMapQuery(CatalogId);
             var result = await _mediator.Send(query);
             return Ok(result);
+        }
+
+        /// <summary>
+        /// Retrieves a catalog map.
+        /// </summary>
+        /// <returns>A CatalogMapDto object.</returns>
+        /// <response code="200">Returns the requested catalog map.</response>
+        /// <response code="400">Invalid input data.</response>
+        /// <response code="401">Unauthorized access.</response>
+        [Authorize]
+        [HttpGet("bibliographic/{CatalogId}")]
+        public async Task<IActionResult> GenerateBibliographic([FromRoute] int CatalogId)
+        {
+            var UserId = this.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (UserId == null)
+            {
+                return Unauthorized();
+            }
+
+            var query = new GenerateBibliographicRecordQuery(CatalogId);
+            var result = await _mediator.Send(query);
+            return File(result, "application/pdf", "FichaAnimal.pdf");
         }
         #endregion
     }

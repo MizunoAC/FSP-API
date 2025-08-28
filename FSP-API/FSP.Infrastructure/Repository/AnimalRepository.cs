@@ -243,16 +243,16 @@ namespace FSP.Infrastructure.Repository
             return results;
         }
 
-        public async Task<CatalogDto> GetCatalogByCommonNoun(string commonNoun)
+        public async Task<CatalogDto> GetCatalogById(int catalogId)
         {
             var result = new CatalogDto();
-            var sql = ResourceHelper.GetResource("GetCatalogByCommonNoun");
+            var sql = ResourceHelper.GetResource("GetCatalogById");
             using (SqlConnection conn = new SqlConnection(_conn))
             using (var cmd = new SqlCommand(sql, conn))
             {
                 cmd.CommandType = CommandType.Text;
                 cmd.Parameters.Clear();
-                cmd.Parameters.AddWithValue("@CommonNoun", commonNoun);
+                cmd.Parameters.AddWithValue("@CatalogId", catalogId);
                 await conn.OpenAsync();
                 var reader = await cmd.ExecuteReaderAsync();
 
@@ -265,8 +265,7 @@ namespace FSP.Infrastructure.Repository
                     {
                         var base64String = Convert.ToBase64String(binaryData);
                         base64Image = $"data:image/jpeg;base64,{base64String}";
-                    }
-                    int.TryParse(reader["CatalogId"].ToString(), out int catalogId);
+                    };
 
                     result.CatalogId = catalogId;
                     result.Specie = reader["Specie"].ToString();
@@ -280,9 +279,6 @@ namespace FSP.Infrastructure.Repository
                     result.Category = reader["Category"].ToString();
                     result.Image = base64Image;
                 }
-
-                await conn.CloseAsync();
-                await reader.DisposeAsync();
             }
             return result;
         }

@@ -10,6 +10,13 @@
 
   <ItemGroup>
     <None Remove="Templates\Email_Notification.html" />
+    <None Remove="Templates\Template_ficha.html" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Templates\Template_ficha.html">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </EmbeddedResource>
   </ItemGroup>
 
   <ItemGroup>
