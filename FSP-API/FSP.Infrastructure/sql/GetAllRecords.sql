@@ -21,6 +21,7 @@ INNER JOIN [dbo].[UserRecords] AR ON AR.RecordState = RS.StatusId
 INNER JOIN [dbo].[UserRecordsLocation] AL ON AR.RecordId = AL.RecordId
 INNER JOIN [dbo].[UserRecordsPicture] AP ON AP.RecordId = AL.RecordId
 INNER JOIN [dbo].[RecordAnimalState] AE ON AE.Id = AR.AnimalState
+WHERE RS.[Description] = @RecordStatus
 
 SELECT 
     FR.[RecordId],

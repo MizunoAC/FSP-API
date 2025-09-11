@@ -59,8 +59,8 @@ namespace FSP.Infrastructure.Repository
                     else
                     {
                         result.Message = reader["Message"].ToString();
+                        result.Error = true;
                     }
-                    result.Error = validate;
 
                 }
                 await conn.CloseAsync();

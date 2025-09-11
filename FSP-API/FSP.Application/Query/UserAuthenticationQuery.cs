@@ -33,7 +33,7 @@ namespace FSP.Application.Query
         {
             var result = await _Repository.Authentication(request.User);
 
-            if (!result.Error) 
+            if (result.Error) 
             {
                 throw new HttpRequestException(result.Message, null, HttpStatusCode.Unauthorized);
             }
