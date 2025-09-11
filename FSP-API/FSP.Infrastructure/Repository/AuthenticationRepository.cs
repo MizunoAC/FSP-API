@@ -72,8 +72,9 @@ namespace FSP.Infrastructure.Repository
         public TokenResult TokenGenerationRS(string User, UserType userType)
         {
             var rsa = RSA.Create();
-            string path = _config["Jwt:PrivateKeyPath"];
-            string privateKey = File.ReadAllText(path);
+            var keyPath = Environment.GetEnvironmentVariable("JWT_PRIVATE_KEY");
+            var privateKey = File.ReadAllText(keyPath);
+
             rsa.ImportFromPem(privateKey);
 
             var credentials = new SigningCredentials(new RsaSecurityKey(rsa), SecurityAlgorithms.RsaSha256);
@@ -139,8 +140,8 @@ namespace FSP.Infrastructure.Repository
         public string TokenGenerationRSPasswordReset(string User)
         {
             var rsa = RSA.Create();
-            string path = _config["Jwt:PrivateKeyPath"];
-            string privateKey = File.ReadAllText(path);
+            var keyPath = Environment.GetEnvironmentVariable("JWT_PRIVATE_KEY");
+            var privateKey = File.ReadAllText(keyPath);
             rsa.ImportFromPem(privateKey);
 
             var credentials = new SigningCredentials(new RsaSecurityKey(rsa), SecurityAlgorithms.RsaSha256);
@@ -291,7 +292,7 @@ namespace FSP.Infrastructure.Repository
         {
 
             var rsa = RSA.Create();
-            string publicKey = File.ReadAllText(_config["Jwt:PublicKeyPath"]);
+            string publicKey = File.ReadAllText(Path.Combine(AppContext.BaseDirectory, _config["Jwt:PublicKeyPath"]));
             rsa.ImportFromPem(publicKey);
 
             var tokenHandler = new JwtSecurityTokenHandler();
