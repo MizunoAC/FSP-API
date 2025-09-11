@@ -31,11 +31,12 @@ internal class Program
 
         var config = new ConfigurationBuilder()
             .AddJsonFile("appsettings.json")
+            .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true)
             .Build();
 
         var connectionString = builder.Configuration.GetConnectionString("WebConnection");
         var rsa = RSA.Create();
-        var dir = config["Jwt:PublicKeyPath"];
+        var dir = Path.Combine(AppContext.BaseDirectory, config["Jwt:PublicKeyPath"]);
         rsa.ImportFromPem(File.ReadAllText(dir));
 
         var rsaSecurityKey = new RsaSecurityKey(rsa);

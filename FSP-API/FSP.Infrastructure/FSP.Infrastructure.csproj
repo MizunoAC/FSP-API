@@ -7,12 +7,16 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Keys\public_key.pem" />
     <None Remove="sql\GetRecordsByUser.sql" />
     <None Remove="sql\GetUserById.sql" />
     <None Remove="sql\IsValidRefreshToken.sql" />
   </ItemGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="Keys\public_key.pem">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </EmbeddedResource>
     <EmbeddedResource Include="sql\GetCommonNoun.sql">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </EmbeddedResource>
