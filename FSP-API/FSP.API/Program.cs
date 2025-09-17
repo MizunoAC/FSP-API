@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using NLog.Extensions.Logging;
 using System.Net;
@@ -48,6 +49,11 @@ internal class Program
             ConnectionString = connectionString
         });
         builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<AddUserCommandHandler>());
+        builder.Services.AddMediatR(cfg =>
+        {
+            cfg.RegisterServicesFromAssembly(typeof(AddRecordAnimalCommandHandler).Assembly);
+        });
+
         builder.Services.AddAuthentication(options =>
         {
             options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -92,6 +98,7 @@ internal class Program
         }
 
         app.UseHttpsRedirection();
+        app.UseStaticFiles();
 
         app.UseCors(x => x
             .AllowAnyMethod()

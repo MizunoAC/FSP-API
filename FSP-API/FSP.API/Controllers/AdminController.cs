@@ -45,7 +45,7 @@ namespace FSP_API.Controladores
                 return Unauthorized();
             }
 
-            var command = new AddNewCatalogCommand(model);
+            var command = new AddNewCatalogCommand(model, UserId);
             var result = await _mediator.Send(command);
             return Ok(result);
         }
@@ -99,7 +99,7 @@ namespace FSP_API.Controladores
                 return Unauthorized();
             }
 
-            var command = new ProcessRecordCommand(recordId, status, root);
+            var command = new ProcessRecordCommand(recordId, status, root, UserId);
             var result = await _mediator.Send(command);
             return Ok(result);
         }
@@ -126,7 +126,7 @@ namespace FSP_API.Controladores
                 return Unauthorized();
             }
 
-            var command = new UpdateCatalogDetailsCommand(catalog);
+            var command = new UpdateCatalogDetailsCommand(catalog, UserId);
             var result = await _mediator.Send(command);
             return Ok(result);
         }
@@ -154,6 +154,31 @@ namespace FSP_API.Controladores
             }
 
             var command = new UpdateCatalogImgCommand(catalog);
+            var result = await _mediator.Send(command);
+            return Ok(result);
+        }
+
+        /// <summary>
+        /// Allows the administrator to get the user list.
+        /// </summary>
+        /// <param name="catalog">The user object containing the users data.</param>
+        /// <returns>Return  a List of users.</returns>
+        /// <response code="200">Get Users.</response>
+        /// <response code="401">Unauthorized access.</response>
+        /// <response code="403">Forbidden. Only administrators can perform this action.</response>
+        [Authorize(Roles = "Admin")]
+        [HttpGet("all-users")]
+        public async Task<IActionResult> GetallUsers([FromQuery] int page, [FromQuery] int size)
+        {
+            var UserId = this.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            string root = _env.ContentRootPath;
+
+            if (UserId == null)
+            {
+                return Unauthorized();
+            }
+
+            var command = new GetAllUsersQuery(page, size);
             var result = await _mediator.Send(command);
             return Ok(result);
         }

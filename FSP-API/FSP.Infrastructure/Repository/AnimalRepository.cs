@@ -12,6 +12,7 @@ using System.Data;
 using System.IO;
 using System.Net;
 using System.Net.Mail;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace FSP.Infrastructure.Repository
 {
@@ -31,9 +32,6 @@ namespace FSP.Infrastructure.Repository
         public async Task<MessageResponse> RegisterNewRecord(AnimalRecordRequest model, string userId)
         {
             var result = new MessageResponse();
-            string base64String = model.img;
-            byte[] imagenBytes = Convert.FromBase64String(base64String);
-
             using (SqlConnection conn = new SqlConnection(_conn))
 
             using (var cmd = new SqlCommand("[dbo].[InsertNewAnimalRecord]", conn))
@@ -45,8 +43,8 @@ namespace FSP.Infrastructure.Repository
                 cmd.Parameters.AddWithValue("@CommonNoun", model.CommonNoun);
                 cmd.Parameters.AddWithValue("@AnimalState", model.AnimalState);
                 cmd.Parameters.AddWithValue("@Description", model.Description);
-                cmd.Parameters.AddWithValue("@img", imagenBytes);
                 cmd.Parameters.AddWithValue("@Location", model.Location);
+                cmd.Parameters.AddWithValue("@ImageGuid", model.ImageGuid);
 
                 await conn.OpenAsync();
                 var reader = await cmd.ExecuteReaderAsync();
@@ -84,14 +82,9 @@ namespace FSP.Infrastructure.Repository
 
                 while (await reader.ReadAsync())
                 {
-                    var base64Image = "";
+
                     int.TryParse(reader["RecordId"].ToString(), out int recordId);
-                    byte[]? binaryData = reader["Image"] != DBNull.Value ? (byte[])reader["Image"] : null;
-                    if (binaryData != null)
-                    {
-                        var base64String = Convert.ToBase64String(binaryData);
-                        base64Image = $"data:image/jpeg;base64,{base64String}";
-                    }
+
                     result.Records.Add(new AnimalRecordDto
                     {
                         RecordId = recordId,
@@ -99,7 +92,7 @@ namespace FSP.Infrastructure.Repository
                         AnimalState = reader["AnimalState"].ToString(),
                         Description = reader["Description"].ToString(),
                         Location = reader["Location"].ToString(),
-                        img = base64Image
+                        img = reader["ImageGuid"].ToString()
                     });
                 }
 
@@ -145,12 +138,6 @@ namespace FSP.Infrastructure.Repository
                 {
                     var base64Image = "";
                     int.TryParse(reader["RecordId"].ToString(), out int recordId);
-                    byte[]? binaryData = reader["Image"] != DBNull.Value ? (byte[])reader["Image"] : null;
-                    if (binaryData != null)
-                    {
-                        var base64String = Convert.ToBase64String(binaryData);
-                        base64Image = $"data:image/jpeg;base64,{base64String}";
-                    }
 
                     results.Records.Add(new AnimalRecordDto
                     {
@@ -159,7 +146,7 @@ namespace FSP.Infrastructure.Repository
                         AnimalState = reader["AnimalState"].ToString(),
                         Description = reader["Description"].ToString(),
                         Location = reader["Location"].ToString(),
-                        img = base64Image
+                        img = reader["ImageGuid"].ToString(),
                     });
                 }
 
@@ -201,11 +188,7 @@ namespace FSP.Infrastructure.Repository
                 cmd.Parameters.AddWithValue("@PageSize", SqlDbType.Int).Value = pageSize;
                 var reader = await cmd.ExecuteReaderAsync();
                 while (await reader.ReadAsync())
-                {
-                    var base64Image = "";
-                    byte[]? binaryData = reader["Image"] != DBNull.Value ? (byte[])reader["Image"] : null;
-                    var base64String = Convert.ToBase64String(binaryData);
-                    base64Image = $"data:image/jpeg;base64,{base64String}";
+                {                   
                     int.TryParse(reader["CatalogId"].ToString(), out int catalogId);
                     results.Catalog.Add(new CatalogDto
                     {
@@ -219,7 +202,7 @@ namespace FSP.Infrastructure.Repository
                         Distribution = reader["Distribution"].ToString(),
                         Feeding = reader["Feeding"].ToString(),
                         Category = reader["Category"].ToString(),
-                        Image = base64Image
+                        Image = reader["ImageGuid"].ToString()
                     });
                 }
                 if (await reader.NextResultAsync())
@@ -258,15 +241,6 @@ namespace FSP.Infrastructure.Repository
 
                 while (await reader.ReadAsync())
                 {
-                    var base64Image = "";
-                    byte[]? binaryData = reader["Image"] != DBNull.Value ? (byte[])reader["Image"] : null;
-
-                    if (binaryData != null)
-                    {
-                        var base64String = Convert.ToBase64String(binaryData);
-                        base64Image = $"data:image/jpeg;base64,{base64String}";
-                    };
-
                     result.CatalogId = catalogId;
                     result.Specie = reader["Specie"].ToString();
                     result.CommonNoun = reader["CommonNoun"].ToString();
@@ -277,7 +251,7 @@ namespace FSP.Infrastructure.Repository
                     result.Distribution = reader["Distribution"].ToString();
                     result.Feeding = reader["Feeding"].ToString();
                     result.Category = reader["Category"].ToString();
-                    result.Image = base64Image;
+                    result.Image = reader["ImageGuid"].ToString();
                 }
             }
             return result;

@@ -25,7 +25,7 @@ namespace FSP.Infrastructure.Repository
             _config = config;
         }
         #region admin
-        public async Task<MessageResponse> UpdateCatalog(CatalogRequestDto catalog)
+        public async Task<MessageResponse> UpdateCatalog(CatalogRequestDto catalog, string userId)
         {
             var result = new MessageResponse();
             using (var conn = new SqlConnection(_conn))
@@ -43,7 +43,8 @@ namespace FSP.Infrastructure.Repository
                 cmd.Parameters.AddWithValue("@Distribution", catalog.Distribution);
                 cmd.Parameters.AddWithValue("@Feeding", catalog.Feeding);
                 cmd.Parameters.AddWithValue("@Category", catalog.Category);
-                cmd.Parameters.Add(new SqlParameter("@Message", SqlDbType.VarChar) { Direction = ParameterDirection.Output, Size = -1});
+                cmd.Parameters.AddWithValue("@AdminId", userId);
+                cmd.Parameters.Add(new SqlParameter("@Message", SqlDbType.VarChar) { Direction = ParameterDirection.Output, Size = -1 });
                 cmd.Parameters.Add(new SqlParameter("@IsError", SqlDbType.Bit) { Direction = ParameterDirection.Output });
 
                 await conn.OpenAsync();
@@ -58,7 +59,7 @@ namespace FSP.Infrastructure.Repository
             return result;
         }
 
-        public async Task<MessageResponse> ProcessRecord(int recordId, string status)
+        public async Task<MessageResponse> ProcessRecord(int recordId, string status, string userId)
         {
             var result = new MessageResponse();
             Enum.TryParse<RecordStatus>(status, ignoreCase: true, out var statusout);
@@ -70,6 +71,7 @@ namespace FSP.Infrastructure.Repository
                 cmd.Parameters.Clear();
                 cmd.Parameters.AddWithValue("@RecordId", recordId);
                 cmd.Parameters.AddWithValue("@Status", statusout);
+                cmd.Parameters.AddWithValue("@AdminId", userId);
 
                 await conn.OpenAsync();
                 var reader = await cmd.ExecuteReaderAsync();
@@ -111,38 +113,9 @@ namespace FSP.Infrastructure.Repository
             return result;
         }
 
-        public void SendEmailNotificacion(UserEmailData data, string rootenv)
-        {
-            var templatePath = Path.Combine(AppContext.BaseDirectory, "Templates", "Email_Notification.html");
-            string templateContent = System.IO.File.ReadAllText(templatePath);
-            IRazorEngine razorEngine = new RazorEngine();
-            IRazorEngineCompiledTemplate template = razorEngine.Compile(templateContent);
-            string emailBody = template.Run(data);
-
-            var subject = "Registro Aceptado";
-            MailMessage mailMessage = new MailMessage
-            {
-                From = new MailAddress(_config["MailSettings:Mail"], "Fauna Silvestre"),
-                Subject = subject,
-                IsBodyHtml = true,
-                Body = emailBody
-            };
-
-            mailMessage.To.Add(data.Email);
-
-            var smtp = new SmtpClient("smtp.zoho.com", 587)
-            {
-                Credentials = new NetworkCredential(_config["MailSettings:Mail"], _config["MailSettings:Password"]),
-                EnableSsl = true
-            };
-            smtp.Send(mailMessage);
-        }
-
-        public async Task<MessageResponse> InsertNewCatalog(CatalogRequest model)
+        public async Task<MessageResponse> InsertNewCatalog(CatalogRequest model, string userId)
         {
             var result = new MessageResponse();
-            string base64String = model.Image;
-            byte[] imagenBytes = Convert.FromBase64String(base64String);
 
             using (SqlConnection conn = new SqlConnection(_conn))
             using (var cmd = new SqlCommand("[dbo].[InsertNewAnimalCatalog]", conn))
@@ -158,8 +131,8 @@ namespace FSP.Infrastructure.Repository
                 cmd.Parameters.AddWithValue("@Distribution", model.Distribution);
                 cmd.Parameters.AddWithValue("@Feeding", model.Feeding);
                 cmd.Parameters.AddWithValue("@Category", model.Category);
-                cmd.Parameters.AddWithValue("@Map", model.Map);
-                cmd.Parameters.AddWithValue("@Image", imagenBytes);
+                cmd.Parameters.AddWithValue("@ImageGuid", model.Image);
+                cmd.Parameters.AddWithValue("@AdminId", Convert.ToInt32(userId));
 
                 await conn.OpenAsync();
                 var reader = await cmd.ExecuteReaderAsync();
@@ -175,30 +148,80 @@ namespace FSP.Infrastructure.Repository
             return result;
         }
 
-        public async Task<MessageResponse> UpdateCatalogImg(CatalogImgDto catalogImg)
+        public async Task<string> GetCatalogImage(int catalogId)
         {
-            var result = new MessageResponse();
-            string base64String = catalogImg.Image;
-            byte[] imagenBytes = Convert.FromBase64String(base64String);
+            var result = "";
+            var sql = ResourceHelper.GetResource("GetCatalogImage");
 
             using (SqlConnection conn = new SqlConnection(_conn))
-            using (var cmd = new SqlCommand("[dbo].[UpdateCatalogImg]", conn))
+            using (var cmd = new SqlCommand(sql, conn))
             {
                 cmd.CommandType = System.Data.CommandType.StoredProcedure;
                 cmd.Parameters.Clear();
-                cmd.Parameters.AddWithValue("@CatalogId", catalogImg.CatalogId);
-                cmd.Parameters.AddWithValue("@Image", imagenBytes);
-                cmd.Parameters.Add(new SqlParameter("@Message", SqlDbType.VarChar) { Direction = ParameterDirection.Output, Size = -1 });
-                cmd.Parameters.Add(new SqlParameter("@Error", SqlDbType.Bit) { Direction = ParameterDirection.Output });
+                cmd.Parameters.AddWithValue("@CatalogId", catalogId);
+
                 await conn.OpenAsync();
-                await cmd.ExecuteReaderAsync();
-                result.Message = cmd.Parameters["@Message"].Value.ToString();
-                bool.TryParse(cmd.Parameters["@Error"].Value.ToString(), out bool isError);
-                result.Error = isError;
+                var reader = await cmd.ExecuteReaderAsync();
+                while (await reader.ReadAsync())
+                {
+                    result = reader["ImageGuid"].ToString();
+                }
                 await conn.CloseAsync();
+                await reader.DisposeAsync();
             }
             return result;
         }
-        #endregion
+
+        public async Task<UsersDtoResponse> GetAllUsers(int pageNumber, int pageSize)
+        {
+            var result = new UsersDtoResponse();
+            var sql = ResourceHelper.GetResource("GetAllUsers");
+
+            using (SqlConnection conn = new SqlConnection(_conn))
+            using (var cmd = new SqlCommand(sql, conn))
+            {
+                cmd.CommandType = System.Data.CommandType.Text;
+                cmd.Parameters.AddWithValue("@PageNumber", SqlDbType.Int).Value = pageNumber;
+                cmd.Parameters.AddWithValue("@PageSize", SqlDbType.Int).Value = pageSize;
+
+                await conn.OpenAsync();
+                var reader = await cmd.ExecuteReaderAsync();
+
+                while (await reader.ReadAsync())
+                {
+                    var user = new UserModelDto();
+                    user.UserName = reader["UserName"].ToString();
+                    user.Name = reader["Name"].ToString();
+                    user.LastName = reader["LastName"].ToString();
+                    user.Gender = reader["Gender"].ToString();
+                    user.Locality = reader["Locality"].ToString();
+                    int.TryParse(reader["Age"].ToString(), out int age);
+                    user.Age = age;
+                    user.Email = reader["Email"].ToString();
+
+                    result.Users.Add(user);
+                }
+                if (await reader.NextResultAsync())
+                {
+                    if (await reader.ReadAsync())
+                    {
+                        result.Pagination = new PaginationModel
+                        {
+                            Page = Convert.ToInt32(reader["page"]),
+                            Size = Convert.ToInt32(reader["size"]),
+                            Total = Convert.ToInt32(reader["total"]),
+                            TotalPages = Convert.ToInt32(reader["totalPages"]),
+                            HasNext = Convert.ToBoolean(reader["hasNext"]),
+                            HasPrev = Convert.ToBoolean(reader["hasPrev"])
+                        };
+                    }
+                }
+
+                await conn.CloseAsync();
+                await reader.DisposeAsync();       
+            }
+            return result;
+        }
     }
+    #endregion
 }

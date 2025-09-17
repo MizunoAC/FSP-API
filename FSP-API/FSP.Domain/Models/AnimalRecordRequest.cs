@@ -8,5 +8,6 @@
         public string? Description {  get; set; }
         public string img { get; set; }
         public string Location { get; set; }
+        public string? ImageGuid { get; set; } = string.Empty;
     }
 }

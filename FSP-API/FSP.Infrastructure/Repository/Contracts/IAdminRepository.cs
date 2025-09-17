@@ -6,11 +6,11 @@ namespace FSP.Infrastructure.Repository.Contracts
     public interface IAdminRepository
     {
 
-        Task<MessageResponse> ProcessRecord(int recordId, string status);
+        Task<MessageResponse> ProcessRecord(int recordId, string status, string userId);
         Task<UserEmailData> GetEmailData(int recordId);
-        void SendEmailNotificacion(UserEmailData data, string rootemv);
-        Task<MessageResponse> InsertNewCatalog(CatalogRequest model);
-        Task<MessageResponse> UpdateCatalog(CatalogRequestDto catalog);
-        Task<MessageResponse> UpdateCatalogImg(CatalogImgDto catalogImg);
+        Task<MessageResponse> InsertNewCatalog(CatalogRequest model, string userId);
+        Task<MessageResponse> UpdateCatalog(CatalogRequestDto catalog, string userId);
+        Task<string> GetCatalogImage(int catalogId);
+        Task<UsersDtoResponse> GetAllUsers(int pageNumber, int pageSize);
     }
 }

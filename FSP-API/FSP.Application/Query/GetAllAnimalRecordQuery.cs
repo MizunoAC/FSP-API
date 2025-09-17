@@ -1,6 +1,7 @@
 ﻿using FSP.Domain.Models.DTO;
 using FSP.Infrastructure.Repository.Contracts;
 using MediatR;
+using Sprache;
 
 namespace FSP.Application.Query
 {
@@ -22,9 +23,19 @@ namespace FSP.Application.Query
     {
         private readonly IAnimalRepository _animalRepository = animalRepository;
 
-        public Task<AnimalRecordResponse> Handle(GetAllAnimalRecordQuery request, CancellationToken cancellationToken)
+        public async Task<AnimalRecordResponse> Handle(GetAllAnimalRecordQuery request, CancellationToken cancellationToken)
         {
-            return  _animalRepository.GetAllRecords(request.RecordStatus, request.PageNumber, request.PageSize);
+            var result =  await _animalRepository.GetAllRecords(request.RecordStatus, request.PageNumber, request.PageSize);
+            var baseUrl = Environment.GetEnvironmentVariable("BASE_URL");
+            foreach (var record in result.Records)
+            {
+                if (string.IsNullOrEmpty(record.img))
+                    continue;
+
+                var imageName = $"{record.img}.png";
+                record.img = $"{baseUrl}/records/{imageName}";
+            }
+            return result;
         }
     }
 }

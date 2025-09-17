@@ -13,7 +13,7 @@ SELECT
     AE.[State] AS [AnimalState], 
     AR.[Description],
     AL.[Location],
-    AP.[Image],
+    AP.[ImageGuid],
     RS.[Description] AS [Status]
 INTO #FilteredRecords
 FROM [dbo].[UserRecordsStatus] RS
@@ -29,7 +29,7 @@ SELECT
     FR.[AnimalState],
     FR.[Description],
     FR.[Location],
-    FR.[Image],
+    FR.[ImageGuid],
     FR.[Status]
 FROM #FilteredRecords FR
 ORDER BY FR.[RecordId] DESC
