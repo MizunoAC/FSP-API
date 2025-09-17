@@ -9,10 +9,13 @@ namespace FSP.Application.Command
     public class UpdateCatalogDetailsCommand : IRequest<MessageResponse>
     {
         public CatalogRequestDto Catalog { get; set; }
-        public UpdateCatalogDetailsCommand(CatalogRequestDto catalog)
+        public string UserId { get; set; }
+        public UpdateCatalogDetailsCommand(CatalogRequestDto catalog, string userId)
         {
             Catalog = catalog;
+            UserId = userId;
         }
+        
     }
 
     public class UpdateCatalogDetailsCommandHandler : IRequestHandler<UpdateCatalogDetailsCommand, MessageResponse>
@@ -24,7 +27,7 @@ namespace FSP.Application.Command
         }
         public async Task<MessageResponse> Handle(UpdateCatalogDetailsCommand request, CancellationToken cancellationToken)
         {
-            var result = await _adminRepository.UpdateCatalog(request.Catalog);
+            var result = await _adminRepository.UpdateCatalog(request.Catalog, request.UserId);
 
             if (result.Error)
             {

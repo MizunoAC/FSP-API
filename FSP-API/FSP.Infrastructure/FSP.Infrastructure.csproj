@@ -8,6 +8,7 @@
 
   <ItemGroup>
     <None Remove="Keys\public_key.pem" />
+    <None Remove="sql\GetAllUsers.sql" />
     <None Remove="sql\GetRecordsByUser.sql" />
     <None Remove="sql\GetUserById.sql" />
     <None Remove="sql\IsValidRefreshToken.sql" />
@@ -15,6 +16,12 @@
 
   <ItemGroup>
     <EmbeddedResource Include="Keys\public_key.pem">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="sql\GetAllUsers.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="sql\GetCatalogImage.sql">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </EmbeddedResource>
     <EmbeddedResource Include="sql\GetCommonNoun.sql">
@@ -64,6 +71,10 @@
 
   <ItemGroup>
     <ProjectReference Include="..\FSP.Domain\FSP.Domain.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Helpers\Contracts\" />
   </ItemGroup>
 
 </Project>

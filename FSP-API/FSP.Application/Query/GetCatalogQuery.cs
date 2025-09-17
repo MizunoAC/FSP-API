@@ -1,6 +1,7 @@
 ﻿using FSP.Domain.Models.DTO;
 using FSP.Infrastructure.Repository.Contracts;
 using MediatR;
+using Sprache;
 
 namespace FSP.Application.Query
 {
@@ -27,7 +28,17 @@ namespace FSP.Application.Query
 
         public async Task<CatalogResponse> Handle(GetCatalogQuery request, CancellationToken cancellationToken)
         {
-           return await _animalRepository.GetCatalog(request.PageNumber, request.PageSize);
+           var result = await _animalRepository.GetCatalog(request.PageNumber, request.PageSize);
+
+            foreach (var catalog in result.Catalog)
+            {
+                if (string.IsNullOrEmpty(catalog.Image))
+                    continue;
+                var baseUrl = Environment.GetEnvironmentVariable("BASE_URL");
+                var imageName = $"{catalog.Image}.png";
+                catalog.Image = $"{baseUrl}/catalog/{imageName}";
+            }
+            return result;
         }
     }
 }

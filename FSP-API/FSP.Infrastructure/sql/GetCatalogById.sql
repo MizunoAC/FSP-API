@@ -8,9 +8,7 @@ SELECT WC.[Specie],
 	   WC.[Distribution],
 	   WC.[Feeding],
 	   WC.[Category],
-	   WCP.[Image],
-	   DM.[Map]
+	   WCP.[ImageGuid]
   FROM [dbo].[Wildlife_Catalog] WC
   INNER JOIN [dbo].[Wildlife_Catalog_Picture] WCP ON WCP.CatalogId = WC.CatalogId
-  INNER JOIN [dbo].[DistributionMaps] DM ON DM.CatalogId = WC.CatalogId
   WHERE WC.CatalogId = @CatalogId

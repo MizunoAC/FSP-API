@@ -24,7 +24,11 @@ namespace FSP.Application.Query
 
         public async Task<CatalogDto> Handle(GetCatalogById request, CancellationToken cancellationToken)
         {
-           return await _animalRepository.GetCatalogById(request.CatalogId);
+           var result = await _animalRepository.GetCatalogById(request.CatalogId);
+            var baseUrl = Environment.GetEnvironmentVariable("BASE_URL");
+            var imageName = $"{result.Image}.png";
+            result.Image = $"{baseUrl}/catalog/{imageName}";
+            return result;
         }
     }
 }

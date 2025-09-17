@@ -1,6 +1,8 @@
 ﻿using FSP.Domain.Models.DTO;
+using FSP.Infrastructure.Repository;
 using FSP.Infrastructure.Repository.Contracts;
 using MediatR;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace FSP.Application.Query
 {
@@ -29,9 +31,21 @@ namespace FSP.Application.Query
             _animalRepository = animalRepository;
         }
 
-        public Task<AnimalRecordResponse> Handle(GetAnimalRecordByUserQuery request, CancellationToken cancellationToken)
+        public async Task<AnimalRecordResponse> Handle(GetAnimalRecordByUserQuery request, CancellationToken cancellationToken)
         {
-            return _animalRepository.GetRecordsByUserId(request.UserId, request.RecordStatus, request.PageNumber, request.PageSize);
+            var result = await _animalRepository.GetRecordsByUserId(request.UserId, request.RecordStatus, request.PageNumber, request.PageSize);
+            var baseUrl = Environment.GetEnvironmentVariable("BASE_URL");
+            foreach (var record in result.Records)
+            {
+                if (string.IsNullOrEmpty(record.img))
+                    continue;
+
+                var imageName = $"{record.img}.png";
+
+                record.img = $"{baseUrl}/records/{record.img}.png";
+            }
+           
+            return result;
         }
     }
 }

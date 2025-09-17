@@ -17,12 +17,10 @@ SELECT
        WC.[Distribution],
        WC.[Feeding],
        WC.[Category],
-       WCP.[Image],
-       DM.[Map]
+       WCP.[ImageGuid]
 INTO #FilteredCatalog
 FROM [dbo].[Wildlife_Catalog] WC
 INNER JOIN [dbo].[Wildlife_Catalog_Picture] WCP ON WCP.CatalogId = WC.CatalogId
-INNER JOIN [dbo].[DistributionMaps] DM ON DM.CatalogId = WC.CatalogId;
 
 SELECT 
        FC.[CatalogId],
@@ -35,8 +33,7 @@ SELECT
        FC.[Distribution],
        FC.[Feeding],
        FC.[Category],
-       FC.[Image],
-       FC.[Map]
+       FC.[ImageGuid]
 FROM #FilteredCatalog FC
 ORDER BY FC.CatalogId DESC
 OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;

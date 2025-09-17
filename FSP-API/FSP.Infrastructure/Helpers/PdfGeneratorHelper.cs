@@ -27,13 +27,12 @@ namespace FSP.Infrastructure.Helpers
 
         private async Task<string> GenerateHtmlContentAsync(Catalogbibliographic model, CancellationToken cancellationToken)
         {
+            var BaseUrl = Environment.GetEnvironmentVariable("BASE_URL");
             var templatePath = Path.Combine(AppContext.BaseDirectory, "Templates", "Template_ficha.html");
             var templateContent = await File.ReadAllTextAsync(templatePath, Encoding.UTF8, cancellationToken);
 
-            // Usar StringBuilder para mejor rendimiento
             var html = new StringBuilder(templateContent);
 
-            // Reemplazos optimizados usando WebUtility.HtmlEncode
             var replacements = new Dictionary<string, string>
             {
                 {"{{commonNoun}}", WebUtility.HtmlEncode(model.Catalog.CommonNoun ?? string.Empty)},
@@ -45,7 +44,7 @@ namespace FSP.Infrastructure.Helpers
                 {"{{feeding}}", WebUtility.HtmlEncode(model.Catalog.Feeding ?? string.Empty)},
                 {"{{distribution}}", WebUtility.HtmlEncode(model.Catalog.Distribution ?? string.Empty)},
                 {"{{category}}", WebUtility.HtmlEncode(model.Catalog.Category ?? string.Empty)},
-                {"{{image}}", model.Catalog.Image ?? string.Empty}
+                {"{{image}}", $"{BaseUrl}/catalog/{model.Catalog.Image}" ?? string.Empty}
             };
 
             foreach (var (placeholder, value) in replacements)
@@ -73,7 +72,6 @@ namespace FSP.Infrastructure.Helpers
                         WaitUntil = new[] { WaitUntilNavigation.Load }
                     });
 
-                    // Generar PDF directamente sin archivos temporales
                     return await page.PdfDataAsync(new PdfOptions
                     {
                         Format = PaperFormat.Letter,
