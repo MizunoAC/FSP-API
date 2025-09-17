@@ -44,7 +44,7 @@ namespace FSP.Infrastructure.Helpers
                 {"{{feeding}}", WebUtility.HtmlEncode(model.Catalog.Feeding ?? string.Empty)},
                 {"{{distribution}}", WebUtility.HtmlEncode(model.Catalog.Distribution ?? string.Empty)},
                 {"{{category}}", WebUtility.HtmlEncode(model.Catalog.Category ?? string.Empty)},
-                {"{{image}}", $"{BaseUrl}/catalog/{model.Catalog.Image}" ?? string.Empty}
+                {"{{image}}", $"{BaseUrl}/catalog/{model.Catalog.Image}.png" ?? string.Empty}
             };
 
             foreach (var (placeholder, value) in replacements)

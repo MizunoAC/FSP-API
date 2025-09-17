@@ -41,7 +41,7 @@ namespace FSP.Application.Query
                     var subject = "Restablecer Contraseña";
                     MailMessage mailMessage = new MailMessage
                     {
-                        From = new MailAddress(_config["MailSettings:Mail"], "Fauna Silvestre"),
+                        From = new MailAddress(_config["MailSettings:Mail"], "k'aaxil ba'alilche'"),
                         Subject = subject,
                         IsBodyHtml = true,
                         Body = emailBody

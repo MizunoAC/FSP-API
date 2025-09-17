@@ -55,7 +55,7 @@ namespace FSP.Application.Command
                 var subject = "Registro Aceptado";
                 MailMessage mailMessage = new MailMessage
                 {
-                    From = new MailAddress(_config["MailSettings:Mail"], "Fauna Silvestre"),
+                    From = new MailAddress(_config["MailSettings:Mail"], "k'aaxil ba'alilche'"),
                     Subject = subject,
                     IsBodyHtml = true,
                     Body = emailBody
