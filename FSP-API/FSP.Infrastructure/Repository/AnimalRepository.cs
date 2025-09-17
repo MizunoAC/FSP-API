@@ -84,6 +84,7 @@ namespace FSP.Infrastructure.Repository
                 {
 
                     int.TryParse(reader["RecordId"].ToString(), out int recordId);
+                    DateTime.TryParse(reader["CreatedDate"].ToString(), out DateTime createdDate);
 
                     result.Records.Add(new AnimalRecordDto
                     {
@@ -92,7 +93,8 @@ namespace FSP.Infrastructure.Repository
                         AnimalState = reader["AnimalState"].ToString(),
                         Description = reader["Description"].ToString(),
                         Location = reader["Location"].ToString(),
-                        img = reader["ImageGuid"].ToString()
+                        img = reader["ImageGuid"].ToString(),
+                        CreatedDate = createdDate
                     });
                 }
 
@@ -138,6 +140,7 @@ namespace FSP.Infrastructure.Repository
                 {
                     var base64Image = "";
                     int.TryParse(reader["RecordId"].ToString(), out int recordId);
+                    DateTime.TryParse(reader["CreatedDate"].ToString(), out DateTime createdDate);
 
                     results.Records.Add(new AnimalRecordDto
                     {
@@ -147,6 +150,7 @@ namespace FSP.Infrastructure.Repository
                         Description = reader["Description"].ToString(),
                         Location = reader["Location"].ToString(),
                         img = reader["ImageGuid"].ToString(),
+                        CreatedDate = createdDate
                     });
                 }
 
