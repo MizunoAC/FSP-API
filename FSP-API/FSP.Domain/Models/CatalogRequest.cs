@@ -11,7 +11,6 @@
         public string Distribution { get; set; }
         public string Feeding { get; set; }
         public string Category { get; set; }
-        public string Map { get; set; }
         public string Image { get; set; }
     }
 
