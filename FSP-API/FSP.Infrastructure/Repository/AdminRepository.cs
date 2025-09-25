@@ -156,7 +156,7 @@ namespace FSP.Infrastructure.Repository
             using (SqlConnection conn = new SqlConnection(_conn))
             using (var cmd = new SqlCommand(sql, conn))
             {
-                cmd.CommandType = System.Data.CommandType.StoredProcedure;
+                cmd.CommandType = System.Data.CommandType.Text;
                 cmd.Parameters.Clear();
                 cmd.Parameters.AddWithValue("@CatalogId", catalogId);
 

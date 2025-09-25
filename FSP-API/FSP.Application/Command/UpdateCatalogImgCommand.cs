@@ -32,7 +32,7 @@ namespace FSP.Application.Command
         public async Task<MessageResponse> Handle(UpdateCatalogImgCommand request, CancellationToken cancellationToken)
         {
             var result = await _adminRepository.GetCatalogImage(request.CatalogImg.CatalogId);
-            if (result == null)
+            if (result != null)
             {
                 byte[] imageBytes = Convert.FromBase64String(request.CatalogImg.Image);
                 string fileName = $"{result}{".png"}";
