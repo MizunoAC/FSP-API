@@ -220,7 +220,7 @@ namespace FSP.Infrastructure.Repository
             SqlParameter userId = new SqlParameter();
             var response = "";
             DotNetEnv.Env.Load();
-            string Key = Environment.GetEnvironmentVariable("sqlkey");
+            string Key = Environment.GetEnvironmentVariable("SQL_KEY");
             using (SqlConnection conn = new SqlConnection(_con))
             using (var cmd = new SqlCommand("[dbo].[VerifyCode]", conn))
             {
