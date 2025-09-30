@@ -49,10 +49,11 @@ namespace FSP.Application.Query
 
                     mailMessage.To.Add(request.Email);
 
-                    var smtp = new SmtpClient("smtp.zoho.com", 587)
+                    var smtp = new SmtpClient("mail5011.site4now.net", 587)
                     {
                         Credentials = new NetworkCredential(_config["MailSettings:Mail"], _config["MailSettings:Password"]),
-                        EnableSsl = true
+                        EnableSsl = true,
+                        UseDefaultCredentials = false
                     };
                     smtp.Send(mailMessage);
                     return "code sent successfully";
