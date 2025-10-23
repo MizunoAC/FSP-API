@@ -182,6 +182,32 @@ namespace FSP_API.Controladores
             var result = await _mediator.Send(command);
             return Ok(result);
         }
+
+        /// <summary>
+        /// Retrieves a paginated list of animal records created by the authenticated user, filtered by status.
+        /// </summary>
+        /// <param name="recordStatus">The status of the records: Accepted, Rejected, or Pending.</param>
+        /// <param name="page">The page number for pagination.</param>
+        /// <param name="size">The number of records per page.</param>
+        /// <returns>Returns a paginated list of records created by the user, filtered by status.</returns>
+        /// <response code="200">Returns a list of AnimalRecordDto objects.</response>
+        /// <response code="400">Invalid parameters or request data.</response>
+        /// <response code="401">Unauthorized access.</response>
+        [Authorize(Roles = "Admin")]
+        [HttpGet("RecordByUser/{userId}")]
+        public async Task<IActionResult> GetRecordsByUser([FromRoute] string userId, [FromQuery] string recordStatus, [FromQuery] int page, [FromQuery] int size)
+        {
+            var AdminId = this.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (AdminId == null || recordStatus == null)
+            {
+                return Unauthorized();
+            }
+
+            var query = new GetAnimalRecordByUserQuery(userId, recordStatus, page, size);
+            var result = await _mediator.Send(query);
+            return Ok(result);
+        }
     }
 }
 

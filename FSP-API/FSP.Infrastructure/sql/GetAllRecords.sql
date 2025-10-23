@@ -15,7 +15,8 @@ SELECT
     AL.[Location],
     AP.[ImageGuid],
     RS.[Description] AS [Status],
-	AR.[CreatedDate]
+	AR.[CreatedDate],
+    AR.[AcceptedDate]
 INTO #FilteredRecords
 FROM [dbo].[UserRecordsStatus] RS
 INNER JOIN [dbo].[UserRecords] AR ON AR.RecordState = RS.StatusId
@@ -32,7 +33,8 @@ SELECT
     FR.[Location],
     FR.[ImageGuid],
     FR.[Status],
-	FR.[CreatedDate]
+	FR.[CreatedDate],
+    FR.[AcceptedDate]
 FROM #FilteredRecords FR
 ORDER BY FR.[RecordId] DESC
 OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;

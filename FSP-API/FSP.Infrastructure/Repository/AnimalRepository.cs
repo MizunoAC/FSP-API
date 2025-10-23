@@ -138,7 +138,6 @@ namespace FSP.Infrastructure.Repository
 
                 while (await reader.ReadAsync())
                 {
-                    var base64Image = "";
                     int.TryParse(reader["RecordId"].ToString(), out int recordId);
                     DateTime.TryParse(reader["CreatedDate"].ToString(), out DateTime createdDate);
 
@@ -150,7 +149,8 @@ namespace FSP.Infrastructure.Repository
                         Description = reader["Description"].ToString(),
                         Location = reader["Location"].ToString(),
                         img = reader["ImageGuid"].ToString(),
-                        CreatedDate = createdDate
+                        CreatedDate = createdDate,
+                        AcceptedDate = reader["AcceptedDate"] is DBNull ? null : DateTime.Parse(reader["AcceptedDate"].ToString())
                     });
                 }
 
