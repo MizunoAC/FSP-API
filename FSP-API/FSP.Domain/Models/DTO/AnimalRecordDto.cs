@@ -8,7 +8,8 @@
         public string? Description { get; set; }
         public string img { get; set; } 
         public string Location { get; set; }
-        public DateTime CreatedDate { get; set; }
+        public DateTime? CreatedDate { get; set; }
         public DateTime? AcceptedDate { get; set; }
+        public string RejectedReason { get; set; }
     }
 }

@@ -88,18 +88,18 @@ namespace FSP_API.Controladores
         /// <response code="401">Unauthorized access.</response>
         /// <response code="403">Forbidden. Only administrators can process records.</response>
         [Authorize(Roles = "Admin")]
-        [HttpPatch("process-record/{recordId}")]
-        public async Task<IActionResult> ProcessRecords([FromRoute] int recordId, [FromQuery] string status)
+        [HttpPatch("process-record")]
+        public async Task<IActionResult> ProcessRecords(ProcessRecordRequest recordRequest)
         {
             var UserId = this.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             string root = _env.ContentRootPath;
 
-            if (UserId == null || status == null)
+            if (UserId == null )
             {
                 return Unauthorized();
             }
 
-            var command = new ProcessRecordCommand(recordId, status, root, UserId);
+            var command = new ProcessRecordCommand(recordRequest, Convert.ToInt32(UserId));
             var result = await _mediator.Send(command);
             return Ok(result);
         }
@@ -205,6 +205,30 @@ namespace FSP_API.Controladores
             }
 
             var query = new GetAnimalRecordByUserQuery(userId, recordStatus, page, size);
+            var result = await _mediator.Send(query);
+            return Ok(result);
+        }
+
+        /// <summary>
+        /// Retrieves total statistics of animal records, including counts of Pending, Accepted,
+        /// Rejected records, and the overall total.
+        /// </summary>
+        /// <returns>Returns an object containing aggregated counts of user records per status.</returns>
+        /// <response code="200">Returns TotalStatistics object with status counts.</response>
+        /// <response code="400">Invalid parameters or request data.</response>
+        /// <response code="401">Unauthorized access.</response>
+        [Authorize(Roles = "Admin")]
+        [HttpGet("statistic")]
+        public async Task<IActionResult> GetTotalStatistics()
+        {
+            var UserId = this.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (UserId == null)
+            {
+                return Unauthorized();
+            }
+
+            var query = new GetTotalStatisticsQuery();
             var result = await _mediator.Send(query);
             return Ok(result);
         }
