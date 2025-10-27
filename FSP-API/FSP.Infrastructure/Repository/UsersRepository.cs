@@ -83,7 +83,7 @@ namespace FSP.Infrastructure.Repository
         {
             var result = new MessageResponse();
             using (SqlConnection conn = new SqlConnection(_con))
-            using (var cmd = new SqlCommand("[dbo].[DeleteUserApp]", conn))
+            using (var cmd = new SqlCommand("[dbo].[BlockedUserApp]", conn))
             {
                 cmd.CommandType = System.Data.CommandType.StoredProcedure;
                 cmd.Parameters.Clear();

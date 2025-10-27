@@ -6,7 +6,8 @@ DECLARE @Offset INT = (@PageNumber - 1) * @PageSize;
 IF OBJECT_ID('tempdb..#FilteredUsers') IS NOT NULL
     DROP TABLE #FilteredRecords;
 
-SELECT ud.[UserName],
+SELECT ud.[UserID],
+       ud.[UserName],
        ui.[Name],
        ui.[LastName], 
 	   ui.[Locality], 
@@ -20,10 +21,11 @@ INNER JOIN [dbo].[Genders] g ON g.[Id] = ui.[Gender]
 WHERE ui.[UserType] = 1
 
 
-SELECT [UserName],
+SELECT [UserID],
+       [UserName],
        [Name],
        [LastName], 
-	   [Locality], 
+	   [Locality],
 	   [Gender],
 	   [Age],
 	   [Email]

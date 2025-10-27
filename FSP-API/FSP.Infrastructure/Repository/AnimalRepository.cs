@@ -84,7 +84,6 @@ namespace FSP.Infrastructure.Repository
                 {
 
                     int.TryParse(reader["RecordId"].ToString(), out int recordId);
-                    DateTime.TryParse(reader["CreatedDate"].ToString(), out DateTime createdDate);
 
                     result.Records.Add(new AnimalRecordDto
                     {
@@ -94,7 +93,10 @@ namespace FSP.Infrastructure.Repository
                         Description = reader["Description"].ToString(),
                         Location = reader["Location"].ToString(),
                         img = reader["ImageGuid"].ToString(),
-                        CreatedDate = createdDate
+                        CreatedDate = reader["CreatedDate"] is DBNull ? null : DateTime.Parse(reader["CreatedDate"].ToString()),
+                        AcceptedDate = reader["AcceptedDate"] is DBNull ? null : DateTime.Parse(reader["AcceptedDate"].ToString()),
+                        RejectedReason = reader["RejectedReason"].ToString()
+
                     });
                 }
 
@@ -120,9 +122,9 @@ namespace FSP.Infrastructure.Repository
             }
         }
 
-        public async Task<AnimalRecordResponse> GetAllRecords(string recordStatus, int pageNumber, int pageSize)
+        public async Task<AdminAnimalRecordResponse> GetAllRecords(string recordStatus, int pageNumber, int pageSize)
         {
-            var results = new AnimalRecordResponse();
+            var results = new AdminAnimalRecordResponse();
             var sql = ResourceHelper.GetResource("GetAllRecords");
 
             using (SqlConnection conn = new SqlConnection(_conn))
@@ -141,8 +143,9 @@ namespace FSP.Infrastructure.Repository
                     int.TryParse(reader["RecordId"].ToString(), out int recordId);
                     DateTime.TryParse(reader["CreatedDate"].ToString(), out DateTime createdDate);
 
-                    results.Records.Add(new AnimalRecordDto
+                    results.Records.Add(new AdminAnimalRecord
                     {
+                        UserName = reader["UserName"].ToString(),
                         RecordId = recordId,
                         CommonNoun = reader["CommonNoun"].ToString(),
                         AnimalState = reader["AnimalState"].ToString(),
@@ -150,7 +153,8 @@ namespace FSP.Infrastructure.Repository
                         Location = reader["Location"].ToString(),
                         img = reader["ImageGuid"].ToString(),
                         CreatedDate = createdDate,
-                        AcceptedDate = reader["AcceptedDate"] is DBNull ? null : DateTime.Parse(reader["AcceptedDate"].ToString())
+                        AcceptedDate = reader["AcceptedDate"] is DBNull ? null : DateTime.Parse(reader["AcceptedDate"].ToString()),
+                        RejectedReason = reader["RejectedReason"].ToString()
                     });
                 }
 

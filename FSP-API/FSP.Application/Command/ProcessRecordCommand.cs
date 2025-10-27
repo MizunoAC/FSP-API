@@ -11,16 +11,12 @@ namespace FSP.Application.Command
 {
     public class ProcessRecordCommand : IRequest<MessageResponse>
     {
-        public int RecordId { get; set; }
-        public string Status { get; set; }
-        public string Rootenv { get; set; }
-        public string UserId { get; set; }
 
-        public ProcessRecordCommand(int recordId, string status, string rootenv, string userId)
+        public ProcessRecordRequest Record { get; set; }
+        public int UserId { get; set; }
+        public ProcessRecordCommand(ProcessRecordRequest record, int userId)
         {
-            RecordId = recordId;
-            Status = status;
-            Rootenv = rootenv;
+            Record = record;
             UserId = userId;
         }
     }
@@ -38,12 +34,12 @@ namespace FSP.Application.Command
 
         public async Task<MessageResponse> Handle(ProcessRecordCommand request, CancellationToken cancellationToken)
         {
-            Enum.TryParse<RecordStatus>(request.Status, ignoreCase: true, out var statusout);
-            var result = await _repository.ProcessRecord(request.RecordId, request.Status, request.UserId);
+            Enum.TryParse<RecordStatus>(request.Record.Status, ignoreCase: true, out var statusout);
+            var result = await _repository.ProcessRecord(request.Record, request.UserId);
 
             if (statusout == RecordStatus.Accepted && result != null)
             {
-                var emailData = await _repository.GetEmailData(request.RecordId);
+                var emailData = await _repository.GetEmailData(request.Record.RecordId);
                 emailData.Status = "Aceptado";
 
                 var templatePath = Path.Combine(AppContext.BaseDirectory, "Templates", "Email_Notification.html");

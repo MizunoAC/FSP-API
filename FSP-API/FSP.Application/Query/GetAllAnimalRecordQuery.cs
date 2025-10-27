@@ -5,7 +5,7 @@ using Sprache;
 
 namespace FSP.Application.Query
 {
-    public class GetAllAnimalRecordQuery : IRequest<AnimalRecordResponse>
+    public class GetAllAnimalRecordQuery : IRequest<AdminAnimalRecordResponse>
     {
         public string RecordStatus { get; set; }
         public int PageNumber { get; set; } 
@@ -19,11 +19,11 @@ namespace FSP.Application.Query
         }
     }
 
-    public class GetAllAnimalRecordQueryQueryHandler(IAnimalRepository animalRepository) : IRequestHandler<GetAllAnimalRecordQuery, AnimalRecordResponse>
+    public class GetAllAnimalRecordQueryQueryHandler(IAnimalRepository animalRepository) : IRequestHandler<GetAllAnimalRecordQuery, AdminAnimalRecordResponse>
     {
         private readonly IAnimalRepository _animalRepository = animalRepository;
 
-        public async Task<AnimalRecordResponse> Handle(GetAllAnimalRecordQuery request, CancellationToken cancellationToken)
+        public async Task<AdminAnimalRecordResponse> Handle(GetAllAnimalRecordQuery request, CancellationToken cancellationToken)
         {
             var result =  await _animalRepository.GetAllRecords(request.RecordStatus, request.PageNumber, request.PageSize);
             var baseUrl = Environment.GetEnvironmentVariable("BASE_URL");

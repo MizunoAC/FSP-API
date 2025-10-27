@@ -59,19 +59,20 @@ namespace FSP.Infrastructure.Repository
             return result;
         }
 
-        public async Task<MessageResponse> ProcessRecord(int recordId, string status, string userId)
+        public async Task<MessageResponse> ProcessRecord(ProcessRecordRequest request, int userId)
         {
             var result = new MessageResponse();
-            Enum.TryParse<RecordStatus>(status, ignoreCase: true, out var statusout);
+            Enum.TryParse<RecordStatus>(request.Status, ignoreCase: true, out var statusout);
             int statusValue = (int)statusout;
             using (var conn = new SqlConnection(_conn))
             using (var cmd = new SqlCommand("[dbo].[SP_Process_Record]", conn))
             {
                 cmd.CommandType = CommandType.StoredProcedure;
                 cmd.Parameters.Clear();
-                cmd.Parameters.AddWithValue("@RecordId", recordId);
+                cmd.Parameters.AddWithValue("@RecordId", request.RecordId);
                 cmd.Parameters.AddWithValue("@Status", statusout);
                 cmd.Parameters.AddWithValue("@AdminId", userId);
+                cmd.Parameters.AddWithValue("@Reason", request.RejectedReason != null ? request.RejectedReason : "");
 
                 await conn.OpenAsync();
                 var reader = await cmd.ExecuteReaderAsync();
@@ -190,6 +191,7 @@ namespace FSP.Infrastructure.Repository
                 while (await reader.ReadAsync())
                 {
                     var user = new UserModelDto();
+                    user.UserId = Convert.ToInt32(reader["UserId"]);
                     user.UserName = reader["UserName"].ToString();
                     user.Name = reader["Name"].ToString();
                     user.LastName = reader["LastName"].ToString();
@@ -218,10 +220,33 @@ namespace FSP.Infrastructure.Repository
                 }
 
                 await conn.CloseAsync();
-                await reader.DisposeAsync();       
+                await reader.DisposeAsync();
             }
             return result;
         }
+
+        public async Task<TotalStatistics> GetTotalStatistics()
+        {
+            var result = new TotalStatistics();
+            var sql = ResourceHelper.GetResource("GetTotalStatistics");
+            using (SqlConnection conn = new SqlConnection(_conn))
+            using (var cmd = new SqlCommand(sql, conn))
+            {
+                cmd.CommandType = System.Data.CommandType.Text;
+                await conn.OpenAsync();
+                var reader = await cmd.ExecuteReaderAsync();
+                while (await reader.ReadAsync())
+                {
+                    result.Pending = Convert.ToInt32(reader["Pending"]);
+                    result.Accepted = Convert.ToInt32(reader["Accepted"]);
+                    result.Rejected = Convert.ToInt32(reader["Rejected"]);
+                    result.TotalRecords = Convert.ToInt32(reader["TotalRecords"]);
+                }
+                await conn.CloseAsync();
+                await reader.DisposeAsync();
+            }
+            return result;
+        }
+        #endregion
     }
-    #endregion
 }

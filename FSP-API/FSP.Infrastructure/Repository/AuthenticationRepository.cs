@@ -35,7 +35,7 @@ namespace FSP.Infrastructure.Repository
         {
             TokenResult result = new TokenResult();
             using (SqlConnection conn = new SqlConnection(_con))
-            using (var cmd = new SqlCommand("[dbo].[ValidateUserLogintest]", conn))
+            using (var cmd = new SqlCommand("[dbo].[ValidateUserLogin]", conn))
             {
                 cmd.CommandType = System.Data.CommandType.StoredProcedure;
                 cmd.Parameters.Clear();
@@ -194,7 +194,7 @@ namespace FSP.Infrastructure.Repository
             MessageResponse result = new MessageResponse();
             var response = "";
             using (SqlConnection conn = new SqlConnection(_con))
-            using (var cmd = new SqlCommand("[dbo].[UpdatePasswordV2]", conn))
+            using (var cmd = new SqlCommand("[dbo].[UpdatePassword]", conn))
             {
                 cmd.CommandType = System.Data.CommandType.StoredProcedure;
                 cmd.Parameters.Clear();
@@ -303,7 +303,7 @@ namespace FSP.Infrastructure.Repository
                     return new TokenResult
                     {
                         Error = true,
-                        Message = "An error occurred while validating the refresh token."
+                        Message = "The user has been blocked, please contact support."
                     };
 
                 }
