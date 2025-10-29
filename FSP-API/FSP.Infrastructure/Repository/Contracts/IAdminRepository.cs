@@ -11,7 +11,7 @@ namespace FSP.Infrastructure.Repository.Contracts
         Task<MessageResponse> InsertNewCatalog(CatalogRequest model, string userId);
         Task<MessageResponse> UpdateCatalog(CatalogRequestDto catalog, string userId);
         Task<string> GetCatalogImage(int catalogId);
-        Task<UsersDtoResponse> GetAllUsers(int pageNumber, int pageSize);
+        Task<UsersDtoResponse> GetAllUsers(int pageNumber, int pageSize, bool isActivve);
         Task<TotalStatistics> GetTotalStatistics();
     }
 }
