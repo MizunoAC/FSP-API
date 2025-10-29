@@ -8,10 +8,12 @@ namespace FSP.Application.Query
     {
         public int Page { get; set; }
         public int Size { get; set; }
-        public GetAllUsersQuery(int page, int size)
+        public bool IsActive { get; set; }
+        public GetAllUsersQuery(int page, int size, bool isActive)
         {
             Page = page;
             Size = size;
+            IsActive = isActive;
         }
     }
 
@@ -24,7 +26,7 @@ namespace FSP.Application.Query
         }
         public async Task<UsersDtoResponse> Handle(GetAllUsersQuery request, CancellationToken cancellationToken)
         {
-            var users = await _repository.GetAllUsers(request.Page, request.Size);
+            var users = await _repository.GetAllUsers(request.Page, request.Size, request.IsActive);
             return users;
         }
     }

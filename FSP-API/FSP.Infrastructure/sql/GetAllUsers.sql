@@ -1,5 +1,6 @@
 --DECLARE @PageNumber INT = 1;
 --DECLARE @PageSize INT = 10;
+--DECLARE @isActive BIT = 1
 
 DECLARE @Offset INT = (@PageNumber - 1) * @PageSize;
 
@@ -19,6 +20,7 @@ FROM [dbo].[UserInformation] ui
 INNER JOIN [dbo].[UserDomain] ud ON ud.[UserID] = ui.[UserID]
 INNER JOIN [dbo].[Genders] g ON g.[Id] = ui.[Gender]
 WHERE ui.[UserType] = 1
+  AND ui.[Blocked] != @isActive
 
 
 SELECT [UserID],

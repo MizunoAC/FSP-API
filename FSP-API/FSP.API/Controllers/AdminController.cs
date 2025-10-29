@@ -167,8 +167,8 @@ namespace FSP_API.Controladores
         /// <response code="401">Unauthorized access.</response>
         /// <response code="403">Forbidden. Only administrators can perform this action.</response>
         [Authorize(Roles = "Admin")]
-        [HttpGet("all-users")]
-        public async Task<IActionResult> GetallUsers([FromQuery] int page, [FromQuery] int size)
+        [HttpGet("all-users/{active}")]
+        public async Task<IActionResult> GetallUsers([FromRoute] bool active, [FromQuery] int page, [FromQuery] int size)
         {
             var UserId = this.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             string root = _env.ContentRootPath;
@@ -178,7 +178,7 @@ namespace FSP_API.Controladores
                 return Unauthorized();
             }
 
-            var command = new GetAllUsersQuery(page, size);
+            var command = new GetAllUsersQuery(page, size, active);
             var result = await _mediator.Send(command);
             return Ok(result);
         }

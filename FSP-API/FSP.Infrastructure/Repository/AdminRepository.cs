@@ -173,7 +173,7 @@ namespace FSP.Infrastructure.Repository
             return result;
         }
 
-        public async Task<UsersDtoResponse> GetAllUsers(int pageNumber, int pageSize)
+        public async Task<UsersDtoResponse> GetAllUsers(int pageNumber, int pageSize, bool isActive)
         {
             var result = new UsersDtoResponse();
             var sql = ResourceHelper.GetResource("GetAllUsers");
@@ -184,6 +184,7 @@ namespace FSP.Infrastructure.Repository
                 cmd.CommandType = System.Data.CommandType.Text;
                 cmd.Parameters.AddWithValue("@PageNumber", SqlDbType.Int).Value = pageNumber;
                 cmd.Parameters.AddWithValue("@PageSize", SqlDbType.Int).Value = pageSize;
+                cmd.Parameters.AddWithValue("@isActive", SqlDbType.Bit).Value = isActive;
 
                 await conn.OpenAsync();
                 var reader = await cmd.ExecuteReaderAsync();
