@@ -1,4 +1,4 @@
-# FSP-API — Wildlife (k'aaxil ba'alilche')
+# FSP-API 
 
 REST API built with **ASP.NET Core (.NET 9)** for a wildlife sighting app. Users submit sightings with a photo and location, and administrators accept or reject them. The API also serves a species catalog, sighting maps and PDF fact sheets.
 
